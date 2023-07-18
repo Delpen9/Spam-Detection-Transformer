@@ -7,13 +7,18 @@ import random
 from torch.utils.data import Dataset, DataLoader
 from torch.nn import CrossEntropyLoss
 
+def read_text_file(file_path):
+    with open(file_path, "r") as f:
+        lines = f.read().splitlines()
+    return lines
+
 # Assume that `sentences` is a list of sentences read from your text file
 FILENAME = None
 sentences = read_text_file(FILENAME)
 
 # Parameters
 vocab_size = 30522  # You would need to compute the actual vocab size from your data
-max_length = 64  # Or any other value that fits your data
+max_length = 512  # Or any other value that fits your data
 mask_prob = 0.15  # Masking probability for MLM
 tokenizer = torch.nn.Embedding(vocab_size, max_length)
 
