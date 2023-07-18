@@ -1,9 +1,15 @@
+import sys
+sys.path.insert(0, '../models')
+from transformer import Transformer
+
 import torch
 import random
 from torch.utils.data import Dataset, DataLoader
+from torch.nn import CrossEntropyLoss
 
 # Assume that `sentences` is a list of sentences read from your text file
-sentences = read_text_file("your_file.txt")
+FILENAME = None
+sentences = read_text_file(FILENAME)
 
 # Parameters
 vocab_size = 30522  # You would need to compute the actual vocab size from your data
@@ -42,4 +48,26 @@ class MLMDataset(Dataset):
         return {"inputs": inputs, "labels": labels}
 
 dataset = MLMDataset(sentences, tokenizer)
-dataloader = DataLoader(dataset, batch_size=32)
+dataloader = DataLoader(dataset, batch_size = 32)
+
+# Instantiate the model
+model = Transformer(vocab_size, embed_dim = 256, num_heads = 8, ff_dim = 512, num_blocks = 6, dropout = 0.1)
+
+device = 'cpu'
+model.to(device)  # If using GPU
+optimizer = torch.optim.Adam(model.parameters(), lr = 0.001)
+loss_fn = CrossEntropyLoss(ignore_index=-1)  # Ignore non-masked tokens
+
+# Training Loop
+num_epochs = 10
+for epoch in range(num_epochs):
+    print(f'Epoch {epoch+1}/{num_epochs}')
+    for batch in dataloader:
+        inputs = batch["inputs"].to(device)
+        labels = batch["labels"].to(device)
+        optimizer.zero_grad()
+        outputs = model(inputs)
+        loss = loss_fn(outputs.view(-1, vocab_size), labels.view(-1))
+        loss.backward()
+        optimizer.step()
+    print(f'Loss: {loss.item()}')
