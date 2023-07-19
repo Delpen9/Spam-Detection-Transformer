@@ -17,24 +17,29 @@ if __name__ == '__main__':
     iteration = 0
     for filename in os.listdir(directory_path):
         iteration += 1
-        if iteration > 20:
+        if iteration > 1:
             break
         elif filename.endswith('.txt'):
             with open(os.path.join(directory_path, filename), 'r') as f:
                 sentences.extend(f.read().strip().split('\n'))
 
-    print('tokenize')
-    # Tokenize the sentences
-    inputs = tokenizer(sentences, return_tensors='pt', padding=True, truncation=True, max_length=512)
+    print('tokenizer')
 
-    print('mlm prep')
+    # Tokenize the sentences
+    inputs = tokenizer(sentences, padding=True, truncation=True, max_length=512, return_tensors='pt')
+
+    # Convert inputs to list of tensors
+    inputs = [{k: v[i].unsqueeze(0) for k, v in inputs.items()} for i in range(inputs["input_ids"].shape[0])]
+
     # Prepare the data collator for MLM
     data_collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer, mlm=True, mlm_probability=0.15
     )
 
+    print('mlm')
+
     # Generate the inputs for MLM
-    mlm_inputs = data_collator(inputs)
+    mlm_inputs = [data_collator([input]) for input in inputs]
 
     # Initialize a BERT model for masked language modeling
     model = BertForMaskedLM.from_pretrained('bert-base-uncased')
