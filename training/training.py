@@ -93,6 +93,9 @@ if __name__ == '__main__':
                 # Perform masking
                 num_masks = int(len(sentences[sample_idx]) * MASK_RATIO)
                 mask_idx = np.random.choice(len(sentences[sample_idx]), num_masks)
+
+                # Make sure indices do not exceed input size
+                mask_idx = [min(511, x) for x in mask_idx]
                 input[mask_idx] = MASK_ID
 
                 # Forward pass
