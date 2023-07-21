@@ -66,6 +66,7 @@ if __name__ == '__main__':
 
     # MASK ID for BERT Tokenizer
     MASK_ID = 103
+    MASK_RATIO = 0.15
 
     # Perform training procedure
     NUM_EPOCHS = 10
@@ -90,7 +91,8 @@ if __name__ == '__main__':
                 target = input.clone()
 
                 # Perform masking
-                mask_idx = np.random.choice(len(sentences[sample_idx]), 1)[0]
+                num_masks = int(len(sentences[sample_idx]) * MASK_RATIO)
+                mask_idx = np.random.choice(len(sentences[sample_idx]), num_masks)
                 input[mask_idx] = MASK_ID
 
                 # Forward pass
@@ -104,5 +106,5 @@ if __name__ == '__main__':
                 loss.backward()
                 optimizer.step()
 
-            # Print loss after each iteration
-            print(fr'Epoch: {epoch + 1}, Iteration: {iteration + 1}, Loss: {loss.item()}')
+                # Print loss after each batch
+                print(fr'Epoch: {epoch + 1}, Iteration: {iteration + 1}, Batch: {sample_idx}, Loss: {loss.item()}')
