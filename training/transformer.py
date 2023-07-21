@@ -15,7 +15,7 @@ class TransformerBlock(nn.Module):
         )
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, x, mask=None):
+    def forward(self, x, mask = None):
         attended = self.attention(x, x, x, attn_mask=mask)[0]
         x = x + self.dropout(attended)
         x = self.norm1(x)
@@ -23,7 +23,7 @@ class TransformerBlock(nn.Module):
         return self.norm2(x)
 
 class Transformer(nn.Module):
-    def __init__(self, vocab_size, embed_dim, num_heads, ff_dim, num_blocks, dropout=0.1):
+    def __init__(self, vocab_size, embed_dim, num_heads, ff_dim, num_blocks, dropout = 0.1):
         super(Transformer, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embed_dim)
         self.blocks = nn.ModuleList([
@@ -33,9 +33,9 @@ class Transformer(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.fc = nn.Linear(embed_dim, vocab_size)
 
-    def forward(self, x, mask=None):
+    def forward(self, x, mask = None):
         x = self.embedding(x)
         x = self.dropout(x)
         for block in self.blocks:
-            x = block(x, mask=mask)
+            x = block(x, mask = mask)
         return self.fc(x)

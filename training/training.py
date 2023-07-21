@@ -56,8 +56,6 @@ if __name__ == '__main__':
     NUM_BLOCKS = 12
     DROPOUT = 0.1
 
-    BATCH_SIZE = 32
-
     # Load the model
     model = Transformer(
         vocab_size = VOCAB_SIZE,
@@ -71,14 +69,22 @@ if __name__ == '__main__':
     # Load the BERT tokenizer
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
 
-    # Get batch
-    sentences, masked_sentences, mask_locations = get_batch(BATCH_SIZE)
+    NUM_EPOCHS = 10
+    NUM_ITERATIONS = 1000
+    BATCH_SIZE = 32
+    for epoch in range(NUM_EPOCHS):
+        for iteration in range(NUM_ITERATIONS):
+            sentences, masked_sentences, mask_locations = get_batch(BATCH_SIZE)
 
-    token_ids = tokenizer.__call__(
-        masked_sentences[0],
-        padding = 'max_length',
-        truncation = True,
-        max_length = 512,
-        return_tensors = 'pt',
-        is_split_into_words = True
-    )['input_ids']
+            for sample_idx in range(BATCH_SIZE):
+                token_ids = tokenizer.__call__(
+                    masked_sentences[sample_idx],
+                    padding = 'max_length',
+                    truncation = True,
+                    max_length = 512,
+                    return_tensors = 'pt',
+                    is_split_into_words = True
+                )['input_ids']
+
+                # Perform forward pass on single sample
+                
