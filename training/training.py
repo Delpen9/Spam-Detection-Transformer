@@ -46,9 +46,11 @@ def get_batch(
 if __name__ == '__main__':
     np.random.seed(1234)
 
+    # Set the directory and device
     directory_path = '../data/masking/openwebtext/openwebtext'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+    # Set model hyperparameters
     VOCAB_SIZE = 30522
     EMBED_DIM = 768
     NUM_HEADS = 12
@@ -69,6 +71,7 @@ if __name__ == '__main__':
     # Load the BERT tokenizer
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
 
+    # Perform training procedure
     NUM_EPOCHS = 10
     NUM_ITERATIONS = 1000
     BATCH_SIZE = 32
@@ -86,5 +89,5 @@ if __name__ == '__main__':
                     is_split_into_words = True
                 )['input_ids']
 
-                # Perform forward pass on single sample
-                
+                # TODO: Perform forward pass on single sample
+                forward = None

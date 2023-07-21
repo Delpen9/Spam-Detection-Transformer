@@ -4,7 +4,7 @@ import torch.nn as nn
 class TransformerBlock(nn.Module):
     def __init__(self, embed_dim, num_heads, ff_dim, dropout):
         super(TransformerBlock, self).__init__()
-        self.attention = nn.MultiheadAttention(embed_dim, num_heads, dropout=dropout)
+        self.attention = nn.MultiheadAttention(embed_dim, num_heads, dropout = dropout)
         self.norm1 = nn.LayerNorm(embed_dim)
         self.norm2 = nn.LayerNorm(embed_dim)
         self.ff = nn.Sequential(
