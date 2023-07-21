@@ -44,7 +44,8 @@ def train(
     MASK_RATIO : float,
     NUM_EPOCHS : int,
     NUM_ITERATIONS : int,
-    BATCH_SIZE : int
+    BATCH_SIZE : int,
+    MAX_LENGTH : int
 ) -> None:
     '''
     '''
@@ -58,7 +59,7 @@ def train(
                     sentences[sample_idx],
                     padding = 'max_length',
                     truncation = True,
-                    max_length = 512,
+                    max_length = MAX_LENGTH,
                     return_tensors = 'pt',
                     is_split_into_words = True
                 )['input_ids'][0]
@@ -71,7 +72,7 @@ def train(
                 mask_idx = np.random.choice(len(sentences[sample_idx]), num_masks)
 
                 # Make sure indices do not exceed input size
-                mask_idx = [min(511, x) for x in mask_idx]
+                mask_idx = [min(MAX_LENGTH - 1, x) for x in mask_idx]
                 input[mask_idx] = MASK_ID
 
                 # Forward pass
@@ -103,6 +104,9 @@ if __name__ == '__main__':
     NUM_BLOCKS = 12
     DROPOUT = 0.1
 
+    # Training Hyperparameters
+    LEARNING_RATE = 1e-2
+
     # Load the model
     model = Transformer(
         vocab_size = VOCAB_SIZE,
@@ -112,7 +116,7 @@ if __name__ == '__main__':
         num_blocks = NUM_BLOCKS,
         dropout = DROPOUT
     ).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr = 1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
     criterion = nn.CrossEntropyLoss()
 
     # Load the BERT tokenizer
@@ -127,4 +131,6 @@ if __name__ == '__main__':
     NUM_ITERATIONS = 1000
     BATCH_SIZE = 32
 
-    train(device, model, optimizer, criterion, tokenizer, MASK_ID, MASK_RATIO, NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE)
+    MAX_LENGTH = 128
+
+    train(device, model, optimizer, criterion, tokenizer, MASK_ID, MASK_RATIO, NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH)
