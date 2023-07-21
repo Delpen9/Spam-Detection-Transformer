@@ -4,44 +4,35 @@ from transformers import BertTokenizerFast
 import os
 
 import torch
+import torch.nn as nn
 import numpy as np
 
 def get_batch(
     batch_size : int = 32
-) -> tuple[list, list, list]:
+) -> list:
     '''
     '''
-    # Initialize output values
+    # Initialize output value
     sentences = []
-    masked_sentences = []
-    mask_locations =  []
 
-    # Get file index
-    file_sample_index = np.random.choice(len(masked_sentence), 1)[0]
+    # Get filename
+    directory_list = os.listdir(directory_path)
+    filename_idx = np.random.choice(len(directory_list), 1)[0]
+    filename = directory_list[filename_idx]
 
-    for filename in os.listdir(directory_path)[file_sample_index]:
-        if filename.endswith('.txt'):
-            with open(os.path.join(directory_path, filename), 'r') as f:
-                # Get all sentences in file
-                file_sentences = f.read().lower().strip().split('\n')
+    # Open the file
+    with open(os.path.join(directory_path, filename), 'r') as f:
+        # Get all sentences in file
+        file_sentences = f.read().lower().strip().split('\n')
 
-                # Get batch
-                batch_indices = np.random.choice(len(masked_sentence), batch_size, replace = False)
-                batch_sentences = [file_sentences[batch_idx] for batch_idx in batch_indices]
+        # Get batch
+        batch_indices = np.random.choice(len(file_sentences), batch_size, replace = False)
+        batch_sentences = [file_sentences[batch_idx] for batch_idx in batch_indices]
 
-                # Create tokens
-                sentences.extend([sentence.split() for sentence in batch_sentences])
-                masked_sentences.extend([sentence.split() for sentence in batch_sentences])
+        # Create tokens
+        sentences.extend([sentence.split() for sentence in batch_sentences])
 
-    # Perform masking
-    for masked_sentence in masked_sentences:
-        index = np.random.choice(len(masked_sentence), 1)[0]
-        masked_sentence[index] = '[MASK]'
-
-        # Maintain list of mask indices
-        mask_locations.append(index)
-
-    return (sentences, masked_sentences, mask_locations)
+    return sentences
 
 if __name__ == '__main__':
     np.random.seed(1234)
@@ -66,10 +57,15 @@ if __name__ == '__main__':
         ff_dim = FF_DIM,
         num_blocks = NUM_BLOCKS,
         dropout = DROPOUT
-    )
+    ).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr = 1e-4)
+    criterion = nn.CrossEntropyLoss()
 
     # Load the BERT tokenizer
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
+
+    # MASK ID for BERT Tokenizer
+    MASK_ID = 103
 
     # Perform training procedure
     NUM_EPOCHS = 10
@@ -77,17 +73,36 @@ if __name__ == '__main__':
     BATCH_SIZE = 32
     for epoch in range(NUM_EPOCHS):
         for iteration in range(NUM_ITERATIONS):
-            sentences, masked_sentences, mask_locations = get_batch(BATCH_SIZE)
+            sentences = get_batch(BATCH_SIZE)
 
             for sample_idx in range(BATCH_SIZE):
-                token_ids = tokenizer.__call__(
-                    masked_sentences[sample_idx],
+                # Perform tokenization on input
+                input_ids = tokenizer.__call__(
+                    sentences[sample_idx],
                     padding = 'max_length',
                     truncation = True,
                     max_length = 512,
                     return_tensors = 'pt',
                     is_split_into_words = True
-                )['input_ids']
+                )['input_ids'][0]
 
-                # TODO: Perform forward pass on single sample
-                forward = None
+                input = torch.tensor(input_ids, dtype = torch.long).to(device)
+                target = input.clone()
+
+                # Perform masking
+                mask_idx = np.random.choice(len(sentences[sample_idx]), 1)[0]
+                input[mask_idx] = MASK_ID
+
+                # Forward pass
+                outputs = model(input)
+
+                # Calculate loss
+                loss = criterion(outputs.view(-1, outputs.size(-1)), target.view(-1))
+
+                # Backward pass and optimization
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+
+            # Print loss after each iteration
+            print(fr'Epoch: {epoch + 1}, Iteration: {iteration + 1}, Loss: {loss.item()}')
