@@ -34,44 +34,20 @@ def get_batch(
 
     return sentences
 
-if __name__ == '__main__':
-    np.random.seed(1234)
-
-    # Set the directory and device
-    directory_path = '../data/masking/openwebtext/openwebtext'
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-    # Set model hyperparameters
-    VOCAB_SIZE = 30522
-    EMBED_DIM = 768
-    NUM_HEADS = 12
-    FF_DIM = 3072
-    NUM_BLOCKS = 12
-    DROPOUT = 0.1
-
-    # Load the model
-    model = Transformer(
-        vocab_size = VOCAB_SIZE,
-        embed_dim = EMBED_DIM,
-        num_heads = NUM_HEADS,
-        ff_dim = FF_DIM,
-        num_blocks = NUM_BLOCKS,
-        dropout = DROPOUT
-    ).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr = 1e-4)
-    criterion = nn.CrossEntropyLoss()
-
-    # Load the BERT tokenizer
-    tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
-
-    # MASK ID for BERT Tokenizer
-    MASK_ID = 103
-    MASK_RATIO = 0.15
-
-    # Perform training procedure
-    NUM_EPOCHS = 10
-    NUM_ITERATIONS = 1000
-    BATCH_SIZE = 32
+def train(
+    device : str,
+    model : any,
+    optimizer : any,
+    criterion : any,
+    tokenizer : any,
+    MASK_ID : int,
+    MASK_RATIO : float,
+    NUM_EPOCHS : int,
+    NUM_ITERATIONS : int,
+    BATCH_SIZE : int
+) -> None:
+    '''
+    '''
     for epoch in range(NUM_EPOCHS):
         for iteration in range(NUM_ITERATIONS):
             sentences = get_batch(BATCH_SIZE)
@@ -111,3 +87,44 @@ if __name__ == '__main__':
 
                 # Print loss after each batch
                 print(fr'Epoch: {epoch + 1}, Iteration: {iteration + 1}, Batch: {sample_idx}, Loss: {loss.item()}')
+
+if __name__ == '__main__':
+    np.random.seed(1234)
+
+    # Set the directory and device
+    directory_path = '../data/masking/openwebtext/openwebtext'
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    # Set model hyperparameters
+    VOCAB_SIZE = 30522
+    EMBED_DIM = 768
+    NUM_HEADS = 12
+    FF_DIM = 3072
+    NUM_BLOCKS = 12
+    DROPOUT = 0.1
+
+    # Load the model
+    model = Transformer(
+        vocab_size = VOCAB_SIZE,
+        embed_dim = EMBED_DIM,
+        num_heads = NUM_HEADS,
+        ff_dim = FF_DIM,
+        num_blocks = NUM_BLOCKS,
+        dropout = DROPOUT
+    ).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr = 1e-4)
+    criterion = nn.CrossEntropyLoss()
+
+    # Load the BERT tokenizer
+    tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
+
+    # MASK ID for BERT Tokenizer
+    MASK_ID = 103
+    MASK_RATIO = 0.15
+
+    # Perform training procedure
+    NUM_EPOCHS = 10
+    NUM_ITERATIONS = 1000
+    BATCH_SIZE = 32
+
+    train(device, model, optimizer, criterion, tokenizer, MASK_ID, MASK_RATIO, NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE)
