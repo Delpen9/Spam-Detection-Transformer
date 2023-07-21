@@ -35,7 +35,7 @@ done
 # # iterate over every file in the folder
 # for file in *.txt; do
 #     # Create temp file
-#     tmp_file="temp_file.txt"
+#     tmp_file="${file}.tmp"
 
 #     # remove extra whitespace lines from the .txt files
 #     grep -E '.{100,}' "$file" > "$tmp_file"
