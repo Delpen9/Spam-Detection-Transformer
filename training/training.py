@@ -1,58 +1,49 @@
-import os
-from transformers import BertTokenizerFast, DataCollatorForLanguageModeling, BertForMaskedLM
-import torch
+from transformer import Transformer
+from transformers import BertTokenizerFast
 
+import os
+
+import torch
+import numpy as np
 
 if __name__ == '__main__':
-    # Path to the directory containing the text files
+    np.random.seed(1234)
+
     directory_path = '../data/masking/openwebtext/openwebtext'
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    NUM_TOKENS = 30522
+
+    # Load the model
+    model = Transformer(vocab_size = 30522, embed_dim = 768, num_heads = 12, ff_dim = 3072, num_blocks = 12, dropout = 0.1)
 
     # Load the BERT tokenizer
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
 
     # Initialize a list to hold the sentences
     sentences = []
+    masked_sentences = []
+    mask_locations =  []
 
     # Read all .txt files in the directory
-    iteration = 0
-    for filename in os.listdir(directory_path):
-        iteration += 1
-        if iteration > 1:
-            break
-        elif filename.endswith('.txt'):
+    for filename in os.listdir(directory_path)[:2]:
+        if filename.endswith('.txt'):
             with open(os.path.join(directory_path, filename), 'r') as f:
-                sentences.extend(f.read().strip().split('\n'))
+                file_sentences = f.read().lower().strip().split('\n')
+                sentences.extend([sentence.split() for sentence in file_sentences])
+                masked_sentences.extend([masked_sentence.split() for masked_sentence in file_sentences])
 
-    print('tokenizer')
+    # Determine position of mask
+    for masked_sentence in masked_sentences:
+        index = np.random.choice(len(masked_sentence), 1)[0]
+        mask_locations.append(index)
+        masked_sentence[index] = '[MASK]'
 
-    # Tokenize the sentences
-    inputs = tokenizer(sentences, padding=True, truncation=True, max_length=512, return_tensors='pt')
-
-    # Convert inputs to list of tensors
-    inputs = [{k: v[i].unsqueeze(0) for k, v in inputs.items()} for i in range(inputs["input_ids"].shape[0])]
-
-    # Prepare the data collator for MLM
-    data_collator = DataCollatorForLanguageModeling(
-        tokenizer=tokenizer, mlm=True, mlm_probability=0.15
-    )
-
-    print('mlm')
-
-    # Generate the inputs for MLM
-    mlm_inputs = [data_collator([input]) for input in inputs]
-
-    # Initialize a BERT model for masked language modeling
-    model = BertForMaskedLM.from_pretrained('bert-base-uncased')
-
-    # Move everything to the same device as the model
-    mlm_inputs = {name: tensor.to(model.device) for name, tensor in mlm_inputs.items()}
-
-    print('Forward pass.')
-
-    # Perform a forward pass through the model
-    outputs = model(**mlm_inputs)
-
-    # The MLM loss can be accessed as follows
-    loss = outputs.loss
-
-    print(loss)
+    token_ids = tokenizer.__call__(
+        masked_sentences[0],
+        padding = 'max_length',
+        truncation = True,
+        max_length = 512,
+        return_tensors = 'pt',
+        is_split_into_words = True
+    )['input_ids']
