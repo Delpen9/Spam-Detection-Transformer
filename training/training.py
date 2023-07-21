@@ -49,11 +49,24 @@ if __name__ == '__main__':
     directory_path = '../data/masking/openwebtext/openwebtext'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    NUM_TOKENS = 30522
+    VOCAB_SIZE = 30522
+    EMBED_DIM = 768
+    NUM_HEADS = 12
+    FF_DIM = 3072
+    NUM_BLOCKS = 12
+    DROPOUT = 0.1
+
     BATCH_SIZE = 32
 
     # Load the model
-    model = Transformer(vocab_size = 30522, embed_dim = 768, num_heads = 12, ff_dim = 3072, num_blocks = 12, dropout = 0.1)
+    model = Transformer(
+        vocab_size = VOCAB_SIZE,
+        embed_dim = EMBED_DIM,
+        num_heads = NUM_HEADS,
+        ff_dim = FF_DIM,
+        num_blocks = NUM_BLOCKS,
+        dropout = DROPOUT
+    )
 
     # Load the BERT tokenizer
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
