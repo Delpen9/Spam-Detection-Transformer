@@ -49,13 +49,16 @@ def train(
 ) -> None:
     '''
     '''
+    model = model.to(device)
+
     for epoch in range(NUM_EPOCHS):
         for iteration in range(NUM_ITERATIONS):
             sentences = get_batch(BATCH_SIZE)
 
+            input_list = []
             for sample_idx in range(BATCH_SIZE):
                 # Perform tokenization on input
-                input_ids = tokenizer.__call__(
+                input_ids = tokenizer(
                     sentences[sample_idx],
                     padding = 'max_length',
                     truncation = True,
@@ -64,30 +67,34 @@ def train(
                     is_split_into_words = True
                 )['input_ids'][0]
 
-                input = torch.tensor(input_ids, dtype = torch.long).to(device)
-                target = input.clone()
+                input_list.append(input_ids)
 
-                # Perform masking
-                num_masks = int(len(sentences[sample_idx]) * MASK_RATIO)
-                mask_idx = np.random.choice(len(sentences[sample_idx]), num_masks)
+            inputs = torch.stack(input_list).to(device)
+            targets = inputs.clone()
+
+            # Perform masking
+            for i in range(BATCH_SIZE):
+                num_masks = int(MAX_LENGTH * MASK_RATIO)
+                mask_idx = torch.randperm(n = MAX_LENGTH)[:num_masks]
 
                 # Make sure indices do not exceed input size
-                mask_idx = [min(MAX_LENGTH - 1, x) for x in mask_idx]
-                input[mask_idx] = MASK_ID
+                mask_idx = torch.min(mask_idx, torch.tensor(MAX_LENGTH - 1))
+                inputs[i][mask_idx] = MASK_ID
 
-                # Forward pass
-                outputs = model(input)
+            # Forward pass
+            outputs = model(inputs)
 
-                # Calculate loss
-                loss = criterion(outputs.view(-1, outputs.size(-1)), target.view(-1))
+            # Calculate loss
+            loss = criterion(outputs.view(-1, outputs.size(-1)), targets.view(-1))
 
-                # Backward pass and optimization
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+            # Backward pass and optimization
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-                # Print loss after each batch
-                print(fr'Epoch: {epoch + 1}, Iteration: {iteration + 1}, Batch: {sample_idx}, Loss: {loss.item()}')
+            # Print loss after each batch
+            print(f'Epoch: {epoch + 1}, Iteration: {iteration + 1}, Loss: {loss.item()}')
+
 
 if __name__ == '__main__':
     np.random.seed(1234)
@@ -131,6 +138,6 @@ if __name__ == '__main__':
     NUM_ITERATIONS = 1000
     BATCH_SIZE = 32
 
-    MAX_LENGTH = 128
+    MAX_LENGTH = 64
 
     train(device, model, optimizer, criterion, tokenizer, MASK_ID, MASK_RATIO, NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH)
