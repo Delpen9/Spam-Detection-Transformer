@@ -144,6 +144,6 @@ if __name__ == '__main__':
     NUM_ITERATIONS = 1000
     BATCH_SIZE = 32
 
-    MAX_LENGTH = 64
+    SEQ_LENGTH = 32
 
-    train(device, model, optimizer, criterion, tokenizer, MASK_ID, MASK_RATIO, NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH)
+    train(device, model, optimizer, criterion, tokenizer, MASK_ID, MASK_RATIO, NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH)
