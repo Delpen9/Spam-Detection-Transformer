@@ -74,9 +74,7 @@ def train(
 
             # Perform masking
             for i in range(BATCH_SIZE):
-                # num_masks = int(MAX_LENGTH * MASK_RATIO)
-                num_masks = 1
-                unpadded_sentence_len = len(sentences[i])
+                num_masks = int(unpadded_sentence_len * MASK_RATIO)
                 mask_idx = torch.randperm(n = unpadded_sentence_len)[:num_masks]
 
                 # Make sure indices do not exceed input size
