@@ -18,7 +18,7 @@ class TransformerBlock(nn.Module):
     def forward(self, x, mask = None):
         # Transpose x to (seq_len, batch_size, embed_dim)
         x = x.transpose(0, 1)
-        attended = self.attention(x, x, x, attn_mask=mask)[0]
+        attended = self.attention(x, x, x, attn_mask = mask)[0]
         # Transpose x back to (batch_size, seq_len, embed_dim)
         x = (x + self.dropout(attended)).transpose(0, 1)
         x = self.norm1(x)

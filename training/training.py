@@ -135,6 +135,10 @@ if __name__ == '__main__':
 
     # Perform training procedure
     NUM_EPOCHS = 10
+
+    # ================
+    # NOTE: Based on a batch size of 32, a single epoch would be equal to 1,500,000 iterations
+    # ================
     NUM_ITERATIONS = 1000
     BATCH_SIZE = 32
 
