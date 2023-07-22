@@ -74,8 +74,10 @@ def train(
 
             # Perform masking
             for i in range(BATCH_SIZE):
-                num_masks = int(MAX_LENGTH * MASK_RATIO)
-                mask_idx = torch.randperm(n = MAX_LENGTH)[:num_masks]
+                # num_masks = int(MAX_LENGTH * MASK_RATIO)
+                num_masks = 1
+                unpadded_sentence_len = len(sentences[i])
+                mask_idx = torch.randperm(n = unpadded_sentence_len)[:num_masks]
 
                 # Make sure indices do not exceed input size
                 mask_idx = torch.min(mask_idx, torch.tensor(MAX_LENGTH - 1))
@@ -126,7 +128,7 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
     criterion = nn.CrossEntropyLoss()
 
-    # Load the BERT tokenizer
+    # # Load the BERT tokenizer
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
 
     # MASK ID for BERT Tokenizer
