@@ -125,6 +125,7 @@ def train(
                     break # break out of while loop at completion of iteration
 
                 except Exception as e:
+                    print('This error occurred due to an occasional issue with the masking during model training.')
                     print(e) # repeat iteration if failure occurs
 
 
