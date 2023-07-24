@@ -1,6 +1,8 @@
+# Tokenization
+from transformers import BertTokenizerFast
+
 # Modeling Version 1
 from model1transformer import Model1Transformer
-from transformers import BertTokenizerFast
 
 # Modeling Version 2
 from models.Transformer import Transformer
