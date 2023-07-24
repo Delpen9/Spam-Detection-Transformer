@@ -64,55 +64,61 @@ def train(
 
     for epoch in range(NUM_EPOCHS):
         for iteration in range(NUM_ITERATIONS):
-            sentences = get_batch(BATCH_SIZE)
+            while True:
+                try:
+                    sentences = get_batch(BATCH_SIZE)
 
-            input_list = []
-            mask_indices_list = []
-            for sample_idx in range(BATCH_SIZE):
-                # Perform tokenization on input
-                input_ids = tokenizer(
-                    sentences[sample_idx],
-                    padding = 'max_length',
-                    truncation = True,
-                    max_length = MAX_LENGTH,
-                    return_tensors = 'pt',
-                    is_split_into_words = True
-                )['input_ids'][0]
+                    input_list = []
+                    mask_indices_list = []
+                    for sample_idx in range(BATCH_SIZE):
+                        # Perform tokenization on input
+                        input_ids = tokenizer(
+                            sentences[sample_idx],
+                            padding = 'max_length',
+                            truncation = True,
+                            max_length = MAX_LENGTH,
+                            return_tensors = 'pt',
+                            is_split_into_words = True
+                        )['input_ids'][0]
 
-                input_list.append(input_ids)
+                        input_list.append(input_ids)
 
-            inputs = torch.stack(input_list).to(device)
-            targets = inputs.clone()
+                    inputs = torch.stack(input_list).to(device)
+                    targets = inputs.clone()
 
-            # Perform masking
-            for i in range(BATCH_SIZE):
-                unpadded_sentence_len = len(sentences[i])
-                if MODEL_VERSION == 1:
-                    num_masks = int(unpadded_sentence_len * MASK_RATIO)
-                elif MODEL_VERSION == 2:
-                    num_masks = 5
-                mask_indices = torch.randperm(n = unpadded_sentence_len)[:num_masks]
+                    # Perform masking
+                    for i in range(BATCH_SIZE):
+                        unpadded_sentence_len = len(sentences[i])
+                        if MODEL_VERSION == 1:
+                            num_masks = int(unpadded_sentence_len * MASK_RATIO)
+                        elif MODEL_VERSION == 2:
+                            num_masks = 5
+                        mask_indices = torch.randperm(n = unpadded_sentence_len)[:num_masks]
 
-                # Make sure indices do not exceed input size
-                mask_indices = torch.min(mask_indices, torch.tensor(MAX_LENGTH - 1))
-                mask_indices_list.append(mask_indices.tolist())
-                inputs[i][mask_indices] = MASK_ID
+                        # Make sure indices do not exceed input size
+                        mask_indices = torch.min(mask_indices, torch.tensor(MAX_LENGTH - 1))
+                        mask_indices_list.append(mask_indices.tolist())
+                        inputs[i][mask_indices] = MASK_ID
 
-            # Forward pass and calculate loss
-            if MODEL_VERSION == 1:
-                outputs = model(inputs)
-                loss = criterion(outputs.view(-1, outputs.size(-1)), targets.view(-1))
-            elif MODEL_VERSION == 2:
-                outputs = model(inputs, mask_indices_list)
-                loss = criterion(torch.transpose(outputs, -1, -2), torch.tensor(mask_indices_list))
+                    # Forward pass and calculate loss
+                    if MODEL_VERSION == 1:
+                        outputs = model(inputs)
+                        loss = criterion(outputs.view(-1, outputs.size(-1)), targets.view(-1))
+                    elif MODEL_VERSION == 2:
+                        outputs = model(inputs, mask_indices_list)
+                        loss = criterion(torch.transpose(outputs, -1, -2), torch.tensor(mask_indices_list))
 
-            # Backward pass and optimization
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+                    # Backward pass and optimization
+                    optimizer.zero_grad()
+                    loss.backward()
+                    optimizer.step()
 
-            # Print loss after each batch
-            print(f'Epoch: {epoch + 1}, Iteration: {iteration + 1}, Loss: {loss.item()}')
+                    # Print loss after each batch
+                    print(f'Epoch: {epoch + 1}, Iteration: {iteration + 1}, Loss: {loss.item()}')
+                    break # break out of while loop at completion of iteration
+
+                except Exception as e:
+                    print(e) # repeat iteration if failure occurs
 
 
 if __name__ == '__main__':
