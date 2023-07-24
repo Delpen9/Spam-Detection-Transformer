@@ -56,7 +56,8 @@ def train(
     NUM_ITERATIONS : int,
     BATCH_SIZE : int,
     MAX_LENGTH : int,
-    MODEL_VERSION : int = 1
+    MODEL_VERSION : int,
+    NUM_MASKED : int
 ) -> None:
     '''
     '''
@@ -92,7 +93,7 @@ def train(
                         if MODEL_VERSION == 1:
                             num_masks = int(unpadded_sentence_len * MASK_RATIO)
                         elif MODEL_VERSION == 2:
-                            num_masks = 5
+                            num_masks = NUM_MASKED
                         mask_indices = torch.randperm(n = unpadded_sentence_len)[:num_masks]
 
                         # Make sure indices do not exceed input size
@@ -103,10 +104,16 @@ def train(
                     # Forward pass and calculate loss
                     if MODEL_VERSION == 1:
                         outputs = model(inputs)
-                        loss = criterion(outputs.view(-1, outputs.size(-1)), targets.view(-1))
+                        reshaped_outputs = outputs.view(-1, outputs.size(-1)).clone()
+                        desired_target = targets.view(-1).clone()
+                    
                     elif MODEL_VERSION == 2:
                         outputs = model(inputs, mask_indices_list)
-                        loss = criterion(torch.transpose(outputs, -1, -2), torch.tensor(mask_indices_list))
+                        reshaped_outputs = torch.transpose(outputs, -1, -2).view(-1, 30522).clone()
+                        desired_target = targets.gather(dim = 1, index = torch.tensor(mask_indices_list)).view(-1)
+
+                    # Calculate loss
+                    loss = criterion(reshaped_outputs, desired_target)
 
                     # Backward pass and optimization
                     optimizer.zero_grad()
@@ -135,14 +142,15 @@ if __name__ == '__main__':
     FF_DIM = 3072
     NUM_BLOCKS = 12
     DROPOUT = 0.1
-    SEQ_LENGTH = 32
-    NUM_LAYERS = 6 # Specific to model 2
+    SEQ_LENGTH = 8
+    NUM_LAYERS = 1 # Specific to model 2
+    NUM_MASKED = 1 # Specific to model 2
 
     # Training Hyperparameters
     LEARNING_RATE = 1e-2
 
     # Select particular model to use
-    MODEL_VERSION = 2
+    MODEL_VERSION = 1
 
     # Load the model
     if MODEL_VERSION == 1:
@@ -166,9 +174,9 @@ if __name__ == '__main__':
             expansion_factor = 4,
             n_heads = NUM_HEADS
         )
-        model = PretrainedOnMLM(transformer_encoder, VOCAB_SIZE, EMBED_DIM)
+        model = PretrainedOnMLM(transformer_encoder, VOCAB_SIZE, EMBED_DIM, SEQ_LENGTH, NUM_MASKED)
         optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
-        criterion = nn.NLLLoss()
+        criterion = nn.CrossEntropyLoss()
 
     # # Load the BERT tokenizer
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
@@ -190,5 +198,5 @@ if __name__ == '__main__':
         device, model, optimizer, criterion,
         tokenizer, MASK_ID, MASK_RATIO,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH,
-        MODEL_VERSION
+        MODEL_VERSION, NUM_MASKED
     )
