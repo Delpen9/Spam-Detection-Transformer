@@ -142,15 +142,15 @@ if __name__ == '__main__':
     FF_DIM = 3072
     NUM_BLOCKS = 12
     DROPOUT = 0.1
-    SEQ_LENGTH = 8
-    NUM_LAYERS = 1 # Specific to model 2
-    NUM_MASKED = 1 # Specific to model 2
+    SEQ_LENGTH = 32
+    NUM_LAYERS = 1 # Specific to model 2: Increases number of parameters in the model (keep to 1 on cpu)
+    NUM_MASKED = int(SEQ_LENGTH * 0.15) # Specific to model 2
 
     # Training Hyperparameters
     LEARNING_RATE = 1e-2
 
     # Select particular model to use
-    MODEL_VERSION = 1
+    MODEL_VERSION = 2
 
     # Load the model
     if MODEL_VERSION == 1:

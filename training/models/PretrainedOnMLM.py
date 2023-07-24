@@ -34,11 +34,10 @@ class MaskedLanguageModel(nn.Module):
 
         self.fc1 = nn.Linear(embed_dim, vocab_size)
         self.fc2 = nn.Linear(seq_len, num_masked)
-        self.softmax = nn.LogSoftmax(dim = -1)
 
     def forward(self, x):
         x = self.fc1(x)
         x = x.permute(0, -1, -2)
         x = self.fc2(x)
         x = x.permute(0, -1, -2)
-        return self.softmax(x)
+        return x
