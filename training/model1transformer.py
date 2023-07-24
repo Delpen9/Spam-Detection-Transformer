@@ -25,9 +25,9 @@ class TransformerBlock(nn.Module):
         x = x + self.dropout(self.ff(x))
         return self.norm2(x)
 
-class Transformer(nn.Module):
+class Model1Transformer(nn.Module):
     def __init__(self, vocab_size, embed_dim, num_heads, ff_dim, num_blocks, dropout = 0.1):
-        super(Transformer, self).__init__()
+        super(Model1Transformer, self).__init__()
         self.embedding = nn.Embedding(vocab_size, embed_dim)
         self.blocks = nn.ModuleList([
             TransformerBlock(embed_dim, num_heads, ff_dim, dropout)

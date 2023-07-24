@@ -1,8 +1,18 @@
-from transformer import Transformer
+# Modeling Version 1
+from model1transformer import Model1Transformer
 from transformers import BertTokenizerFast
 
+# Modeling Version 2
+from models.Transformer import Transformer
+from models.TransformerEncoder import TransformerEncoder
+from models.PretrainedOnMLM import PretrainedOnMLM
+from models.SpamDetectionModel import SpamDetectionModel
+from models.DistilledFromTinyBert import DistilledFromTinyBert
+
+# Directory Library
 import os
 
+# Standard Data Science Libraries
 import torch
 import torch.nn as nn
 import numpy as np
@@ -45,7 +55,8 @@ def train(
     NUM_EPOCHS : int,
     NUM_ITERATIONS : int,
     BATCH_SIZE : int,
-    MAX_LENGTH : int
+    MAX_LENGTH : int,
+    MODEL_VERSION : int = 1
 ) -> None:
     '''
     '''
@@ -56,6 +67,7 @@ def train(
             sentences = get_batch(BATCH_SIZE)
 
             input_list = []
+            mask_indices_list = []
             for sample_idx in range(BATCH_SIZE):
                 # Perform tokenization on input
                 input_ids = tokenizer(
@@ -74,18 +86,26 @@ def train(
 
             # Perform masking
             for i in range(BATCH_SIZE):
+                unpadded_sentence_len = len(sentences[i])
                 num_masks = int(unpadded_sentence_len * MASK_RATIO)
-                mask_idx = torch.randperm(n = unpadded_sentence_len)[:num_masks]
+                mask_indices = torch.randperm(n = unpadded_sentence_len)[:num_masks]
 
                 # Make sure indices do not exceed input size
-                mask_idx = torch.min(mask_idx, torch.tensor(MAX_LENGTH - 1))
-                inputs[i][mask_idx] = MASK_ID
+                mask_indices = torch.min(mask_indices, torch.tensor(MAX_LENGTH - 1))
+                mask_indices_list.append(mask_indices.tolist())
+                inputs[i][mask_indices] = MASK_ID
 
             # Forward pass
-            outputs = model(inputs)
+            if MODEL_VERSION == 1:
+                outputs = model(inputs)
+            elif MODEL_VERSION == 2:
+                outputs = model(inputs, mask_indices_list)
 
             # Calculate loss
-            loss = criterion(outputs.view(-1, outputs.size(-1)), targets.view(-1))
+            if MODEL_VERSION == 1:
+                loss = criterion(outputs.view(-1, outputs.size(-1)), targets.view(-1))
+            elif MODEL_VERSION == 2:
+                loss = model.loss(torch.tensor([[10, 9],[10, 9]]), outputs)
 
             # Backward pass and optimization
             optimizer.zero_grad()
@@ -110,21 +130,38 @@ if __name__ == '__main__':
     FF_DIM = 3072
     NUM_BLOCKS = 12
     DROPOUT = 0.1
+    SEQ_LENGTH = 32
+    NUM_LAYERS = 6 # Specific to model 2
 
     # Training Hyperparameters
     LEARNING_RATE = 1e-2
 
+    # Select particular model to use
+    MODEL_VERSION = 1
+
     # Load the model
-    model = Transformer(
-        vocab_size = VOCAB_SIZE,
-        embed_dim = EMBED_DIM,
-        num_heads = NUM_HEADS,
-        ff_dim = FF_DIM,
-        num_blocks = NUM_BLOCKS,
-        dropout = DROPOUT
-    ).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
-    criterion = nn.CrossEntropyLoss()
+    if MODEL_VERSION == 1:
+        model = Model1Transformer(
+            vocab_size = VOCAB_SIZE,
+            embed_dim = EMBED_DIM,
+            num_heads = NUM_HEADS,
+            ff_dim = FF_DIM,
+            num_blocks = NUM_BLOCKS,
+            dropout = DROPOUT
+        ).to(device)
+        optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
+        criterion = nn.CrossEntropyLoss()
+
+    elif MODEL_VERSION == 2:
+        transformer_encoder = TransformerEncoder(
+            SEQ_LENGTH,
+            VOCAB_SIZE,
+            EMBED_DIM,
+            NUM_LAYERS,
+            expansion_factor = 4,
+            n_heads = NUM_HEADS
+        )
+        model = PretrainedOnMLM(transformer_encoder, VOCAB_SIZE, EMBED_DIM)
 
     # # Load the BERT tokenizer
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
@@ -142,6 +179,9 @@ if __name__ == '__main__':
     NUM_ITERATIONS = 1000
     BATCH_SIZE = 32
 
-    SEQ_LENGTH = 32
-
-    train(device, model, optimizer, criterion, tokenizer, MASK_ID, MASK_RATIO, NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH)
+    train(
+        device, model, optimizer, criterion,
+        tokenizer, MASK_ID, MASK_RATIO,
+        NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH,
+        MODEL_VERSION
+    )
