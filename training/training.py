@@ -87,7 +87,10 @@ def train(
             # Perform masking
             for i in range(BATCH_SIZE):
                 unpadded_sentence_len = len(sentences[i])
-                num_masks = int(unpadded_sentence_len * MASK_RATIO)
+                if MODEL_VERSION == 1:
+                    num_masks = int(unpadded_sentence_len * MASK_RATIO)
+                elif MODEL_VERSION == 2:
+                    num_masks = 5
                 mask_indices = torch.randperm(n = unpadded_sentence_len)[:num_masks]
 
                 # Make sure indices do not exceed input size
@@ -95,17 +98,13 @@ def train(
                 mask_indices_list.append(mask_indices.tolist())
                 inputs[i][mask_indices] = MASK_ID
 
-            # Forward pass
+            # Forward pass and calculate loss
             if MODEL_VERSION == 1:
                 outputs = model(inputs)
-            elif MODEL_VERSION == 2:
-                outputs = model(inputs, mask_indices_list)
-
-            # Calculate loss
-            if MODEL_VERSION == 1:
                 loss = criterion(outputs.view(-1, outputs.size(-1)), targets.view(-1))
             elif MODEL_VERSION == 2:
-                loss = criterion(torch.tensor([[10, 9],[10, 9]]), outputs)
+                outputs = model(inputs, mask_indices_list)
+                loss = criterion(torch.transpose(outputs, -1, -2), torch.tensor(mask_indices_list))
 
             # Backward pass and optimization
             optimizer.zero_grad()
@@ -163,7 +162,7 @@ if __name__ == '__main__':
         )
         model = PretrainedOnMLM(transformer_encoder, VOCAB_SIZE, EMBED_DIM)
         optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
-        criterion = model.loss()
+        criterion = nn.NLLLoss()
 
     # # Load the BERT tokenizer
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')

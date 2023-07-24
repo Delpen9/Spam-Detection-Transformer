@@ -10,21 +10,12 @@ class PretrainedOnMLM(nn.Module):
         super().__init__()
         self.model = model
         self.mask_lm = MaskedLanguageModel(embed_dim, vocab_size)
-        self.criterion_ce = torch.nn.NLLLoss()
 
     def forward(self, x, pos):
         x = self.model(x)
         x = self.mask_lm(x)
-        x = x[torch.arange(x.size(0)), pos]
+        x = x[torch.arange(x.size(0)).unsqueeze(1), pos]
         return x
-
-    def loss(self, x, output):
-        """
-        :param x: original tokens before masking
-        :param output: output probablities of masked tokens
-        """
-        loss = self.criterion_ce(torch.transpose(output, -1, -2), x)
-        return loss
 
 class MaskedLanguageModel(nn.Module):
     """
@@ -38,7 +29,7 @@ class MaskedLanguageModel(nn.Module):
         """
         super().__init__()
         self.linear = nn.Linear(hidden, vocab_size)
-        self.softmax = nn.LogSoftmax(dim=-1)
+        self.softmax = nn.LogSoftmax(dim = -1)
 
     def forward(self, x):
         return self.softmax(self.linear(x))
