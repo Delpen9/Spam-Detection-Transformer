@@ -105,7 +105,7 @@ def train(
             if MODEL_VERSION == 1:
                 loss = criterion(outputs.view(-1, outputs.size(-1)), targets.view(-1))
             elif MODEL_VERSION == 2:
-                loss = model.loss(torch.tensor([[10, 9],[10, 9]]), outputs)
+                loss = criterion(torch.tensor([[10, 9],[10, 9]]), outputs)
 
             # Backward pass and optimization
             optimizer.zero_grad()
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     LEARNING_RATE = 1e-2
 
     # Select particular model to use
-    MODEL_VERSION = 1
+    MODEL_VERSION = 2
 
     # Load the model
     if MODEL_VERSION == 1:
@@ -162,6 +162,8 @@ if __name__ == '__main__':
             n_heads = NUM_HEADS
         )
         model = PretrainedOnMLM(transformer_encoder, VOCAB_SIZE, EMBED_DIM)
+        optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
+        criterion = model.loss()
 
     # # Load the BERT tokenizer
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
