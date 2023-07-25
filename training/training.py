@@ -2,7 +2,7 @@
 from transformers import BertTokenizerFast
 
 # Modeling Version 1
-from model1transformer import Model1Transformer
+from models.model1transformer import Model1Transformer
 
 # Modeling Version 2
 from models.Transformer import Transformer
@@ -176,8 +176,8 @@ if __name__ == '__main__':
             NUM_LAYERS,
             expansion_factor = 4,
             n_heads = NUM_HEADS
-        )
-        model = PretrainedOnMLM(transformer_encoder, VOCAB_SIZE, EMBED_DIM, SEQ_LENGTH, NUM_MASKED)
+        ).to(device)
+        model = PretrainedOnMLM(transformer_encoder, VOCAB_SIZE, EMBED_DIM, SEQ_LENGTH, NUM_MASKED).to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
         criterion = nn.CrossEntropyLoss()
 
