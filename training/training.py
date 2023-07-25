@@ -110,7 +110,7 @@ def train(
                         desired_target = targets.view(-1).clone()
                     
                     elif MODEL_VERSION == 2:
-                        outputs = model(inputs, mask_indices_list)
+                        outputs = model(inputs)
                         reshaped_outputs = torch.transpose(outputs, -1, -2).view(-1, 30522).clone()
                         desired_target = targets.gather(dim = 1, index = torch.tensor(mask_indices_list)).view(-1)
 
@@ -143,18 +143,29 @@ if __name__ == '__main__':
     EMBED_DIM = 768
     NUM_HEADS = 12
     FF_DIM = 3072
-    NUM_BLOCKS = 12
+    NUM_BLOCKS = 1
     DROPOUT = 0.1
     SEQ_LENGTH = 32
     MASK_RATIO = 0.15
-    NUM_LAYERS = 1 # Specific to model 2: Increases number of parameters in the model (keep to 1 on cpu)
     NUM_MASKED = int(SEQ_LENGTH * MASK_RATIO) # Specific to model 2
 
     # Training Hyperparameters
     LEARNING_RATE = 1e-2
 
     # Select particular model to use
-    MODEL_VERSION = 2
+    MODEL_VERSION = 1
+
+    # MASK ID for BERT Tokenizer
+    MASK_ID = 103
+
+    # Perform training procedure
+    NUM_EPOCHS = 10
+
+    # ================
+    # NOTE: Based on a batch size of 32, a single epoch would be equal to 1,500,000 iterations
+    # ================
+    NUM_ITERATIONS = 1000
+    BATCH_SIZE = 8
 
     # Load the model
     if MODEL_VERSION == 1:
@@ -174,28 +185,16 @@ if __name__ == '__main__':
             SEQ_LENGTH,
             VOCAB_SIZE,
             EMBED_DIM,
-            NUM_LAYERS,
+            NUM_BLOCKS,
             expansion_factor = 4,
             n_heads = NUM_HEADS
         ).to(device)
-        model = PretrainedOnMLM(transformer_encoder, VOCAB_SIZE, EMBED_DIM, SEQ_LENGTH, NUM_MASKED).to(device)
+        model = PretrainedOnMLM(transformer_encoder, VOCAB_SIZE, EMBED_DIM, SEQ_LENGTH, BATCH_SIZE, NUM_MASKED).to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
         criterion = nn.CrossEntropyLoss()
 
     # # Load the BERT tokenizer
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
-
-    # MASK ID for BERT Tokenizer
-    MASK_ID = 103
-
-    # Perform training procedure
-    NUM_EPOCHS = 10
-
-    # ================
-    # NOTE: Based on a batch size of 32, a single epoch would be equal to 1,500,000 iterations
-    # ================
-    NUM_ITERATIONS = 1000
-    BATCH_SIZE = 32
 
     train(
         device, model, optimizer, criterion,
