@@ -3,7 +3,7 @@ from torch import nn
 from .MultiHeadAttention import MultiHeadAttention
 
 class TransformerBlock(nn.Module):
-    def __init__(self, embed_dim, expansion_factor=4, n_heads=8):
+    def __init__(self, embed_dim, expansion_factor = 4, n_heads = 8, dropout = 0.2):
         super(TransformerBlock, self).__init__()
 
         """
@@ -24,8 +24,8 @@ class TransformerBlock(nn.Module):
             nn.Linear(expansion_factor * embed_dim, embed_dim)
         )
 
-        self.dropout1 = nn.Dropout(0.2)
-        self.dropout2 = nn.Dropout(0.2)
+        self.dropout1 = nn.Dropout(dropout)
+        self.dropout2 = nn.Dropout(dropout)
 
     def forward(self, key, query, value):
         """

@@ -19,155 +19,112 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-def get_batch(
-    batch_size : int = 32
-) -> list:
-    '''
-    '''
-    # Initialize output value
-    sentences = []
+class Trainer:
+    def __init__(self, device, model, optimizer, criterion, tokenizer, MASK_ID, MASK_RATIO, NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH, directory_path):
+        self.device = device
+        self.model = model.to(self.device)
+        self.optimizer = optimizer
+        self.criterion = criterion
+        self.tokenizer = tokenizer
+        self.MASK_ID = MASK_ID
+        self.MASK_RATIO = MASK_RATIO
+        self.NUM_EPOCHS = NUM_EPOCHS
+        self.NUM_ITERATIONS = NUM_ITERATIONS
+        self.BATCH_SIZE = BATCH_SIZE
+        self.MAX_LENGTH = MAX_LENGTH
+        self.directory_path = directory_path
 
-    # Get filename
-    directory_list = os.listdir(directory_path)
-    filename_idx = np.random.choice(len(directory_list), 1)[0]
-    filename = directory_list[filename_idx]
+    def get_batch(self):
+        sentences = []
+        directory_list = os.listdir(self.directory_path)
+        filename_idx = np.random.choice(len(directory_list), 1)[0]
+        filename = directory_list[filename_idx]
 
-    # Open the file
-    with open(os.path.join(directory_path, filename), 'r') as f:
-        # Get all sentences in file
-        file_sentences = f.read().lower().strip().split('\n')
+        with open(os.path.join(self.directory_path, filename), 'r') as f:
+            file_sentences = f.read().lower().strip().split('\n')
+            batch_indices = np.random.choice(len(file_sentences), self.BATCH_SIZE, replace = False)
+            batch_sentences = [file_sentences[batch_idx] for batch_idx in batch_indices]
+            sentences.extend([sentence.split() for sentence in batch_sentences])
 
-        # Get batch
-        batch_indices = np.random.choice(len(file_sentences), batch_size, replace = False)
-        batch_sentences = [file_sentences[batch_idx] for batch_idx in batch_indices]
+        return sentences
 
-        # Create tokens
-        sentences.extend([sentence.split() for sentence in batch_sentences])
+    def encode_sentences(self, sentences):
+        input_list = []
+        for sample_idx in range(self.BATCH_SIZE):
+            input_ids = self.tokenizer(
+                sentences[sample_idx],
+                padding = 'max_length',
+                truncation = True,
+                max_length = self.MAX_LENGTH,
+                return_tensors = 'pt',
+                is_split_into_words = True
+            )['input_ids'][0]
 
-    return sentences
+            input_list.append(input_ids)
 
-def train(
-    device : str,
-    model : any,
-    optimizer : any,
-    criterion : any,
-    tokenizer : any,
-    MASK_ID : int,
-    MASK_RATIO : float,
-    NUM_EPOCHS : int,
-    NUM_ITERATIONS : int,
-    BATCH_SIZE : int,
-    MAX_LENGTH : int,
-    MODEL_VERSION : int,
-    NUM_MASKED : int
-) -> None:
-    '''
-    '''
-    model = model.to(device)
+        inputs = torch.stack(input_list).to(self.device)
+        targets = inputs.clone()
+        return (inputs, targets)
 
-    for epoch in range(NUM_EPOCHS):
-        for iteration in range(NUM_ITERATIONS):
-            while True:
-                try:
-                    sentences = get_batch(BATCH_SIZE)
+    def mask_inputs(self, inputs, sentences):
+        mask_indices_list = []
+        for i in range(self.BATCH_SIZE):
+            unpadded_sentence_len = len(sentences[i])
+            num_masks = int(unpadded_sentence_len * self.MASK_RATIO)
+            mask_indices = torch.randperm(n = unpadded_sentence_len)[:num_masks]
+            mask_indices = torch.min(mask_indices, torch.tensor(self.MAX_LENGTH - 1))
+            mask_indices_list.append(mask_indices.tolist())
+            inputs[i][mask_indices] = self.MASK_ID
 
-                    input_list = []
-                    mask_indices_list = []
-                    for sample_idx in range(BATCH_SIZE):
-                        # Perform tokenization on input
-                        input_ids = tokenizer(
-                            sentences[sample_idx],
-                            padding = 'max_length',
-                            truncation = True,
-                            max_length = MAX_LENGTH,
-                            return_tensors = 'pt',
-                            is_split_into_words = True
-                        )['input_ids'][0]
+        return (mask_indices_list, inputs)
 
-                        input_list.append(input_ids)
+    def train(self):
+        for epoch in range(self.NUM_EPOCHS):
+            for iteration in range(self.NUM_ITERATIONS):
+                while True:
+                    try:
+                        sentences = self.get_batch()
 
-                    inputs = torch.stack(input_list).to(device)
-                    targets = inputs.clone()
+                        inputs, targets = self.encode_sentences(sentences)
+                        self.mask_inputs(inputs, sentences)
 
-                    # Perform masking
-                    for i in range(BATCH_SIZE):
-                        unpadded_sentence_len = len(sentences[i])
-                        if MODEL_VERSION == 1:
-                            num_masks = int(unpadded_sentence_len * MASK_RATIO)
-                        elif MODEL_VERSION == 2:
-                            num_masks = NUM_MASKED
-                        mask_indices = torch.randperm(n = unpadded_sentence_len)[:num_masks]
-
-                        # Make sure indices do not exceed input size
-                        mask_indices = torch.min(mask_indices, torch.tensor(MAX_LENGTH - 1))
-                        mask_indices_list.append(mask_indices.tolist())
-                        inputs[i][mask_indices] = MASK_ID
-
-                    # Forward pass and calculate loss
-                    if MODEL_VERSION == 1:
-                        outputs = model(inputs)
-                        reshaped_outputs = outputs.view(-1, outputs.size(-1)).clone()
-                        desired_target = targets.view(-1).clone()
-                    
-                    elif MODEL_VERSION == 2:
-                        outputs = model(inputs)
+                        outputs = self.model(inputs)
                         reshaped_outputs = outputs.view(-1, outputs.size(-1)).clone()
                         desired_target = targets.view(-1).clone()
 
-                    # Calculate loss
-                    loss = criterion(reshaped_outputs, desired_target)
+                        loss = self.criterion(reshaped_outputs, desired_target)
+                        self.optimizer.zero_grad()
+                        loss.backward()
+                        self.optimizer.step()
 
-                    # Backward pass and optimization
-                    optimizer.zero_grad()
-                    loss.backward()
-                    optimizer.step()
-
-                    # Print loss after each batch
-                    print(f'Epoch: {epoch + 1}, Iteration: {iteration + 1}, Loss: {loss.item()}')
-                    break # break out of while loop at completion of iteration
-
-                except Exception as e:
-                    print('This error occurred due to an occasional issue with the masking during model training.')
-                    print(e) # repeat iteration if failure occurs
+                        print(f'Epoch: {epoch + 1}, Iteration: {iteration + 1}, Loss: {loss.item()}')
+                        break
+                    except Exception as e:
+                        print('This error occurred due to an occasional issue with the masking during model training.')
+                        print(e)
 
 
 if __name__ == '__main__':
     np.random.seed(1234)
-
-    # Set the directory and device
     directory_path = '../data/masking/openwebtext/openwebtext'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    # Set model hyperparameters
     VOCAB_SIZE = 30522
     EMBED_DIM = 768
     NUM_HEADS = 12
     FF_DIM = 3072
     NUM_BLOCKS = 1
-    DROPOUT = 0.1
+    DROPOUT = 0.2
     SEQ_LENGTH = 32
     MASK_RATIO = 0.15
-    NUM_MASKED = int(SEQ_LENGTH * MASK_RATIO) # Specific to model 2
-
-    # Training Hyperparameters
+    EXPANSION_FACTOR = 4
     LEARNING_RATE = 1e-2
-
-    # Select particular model to use
     MODEL_VERSION = 2
-
-    # MASK ID for BERT Tokenizer
     MASK_ID = 103
-
-    # Perform training procedure
     NUM_EPOCHS = 10
-
-    # ================
-    # NOTE: Based on a batch size of 32, a single epoch would be equal to 1,500,000 iterations
-    # ================
     NUM_ITERATIONS = 1000
     BATCH_SIZE = 8
 
-    # Load the model
     if MODEL_VERSION == 1:
         model = Model1Transformer(
             vocab_size = VOCAB_SIZE,
@@ -182,23 +139,19 @@ if __name__ == '__main__':
 
     elif MODEL_VERSION == 2:
         transformer_encoder = TransformerEncoder(
-            SEQ_LENGTH,
-            VOCAB_SIZE,
-            EMBED_DIM,
-            NUM_BLOCKS,
-            expansion_factor = 4,
-            n_heads = NUM_HEADS
+            seq_len = SEQ_LENGTH,
+            vocab_size = VOCAB_SIZE,
+            embed_dim = EMBED_DIM,
+            num_layers = NUM_BLOCKS,
+            expansion_factor = EXPANSION_FACTOR,
+            n_heads = NUM_HEADS,
+            dropout = DROPOUT
         ).to(device)
-        model = PretrainedOnMLM(transformer_encoder, VOCAB_SIZE, EMBED_DIM, SEQ_LENGTH, BATCH_SIZE, NUM_MASKED).to(device)
+        model = PretrainedOnMLM(transformer_encoder, EMBED_DIM, VOCAB_SIZE).to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
         criterion = nn.CrossEntropyLoss()
 
-    # # Load the BERT tokenizer
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
 
-    train(
-        device, model, optimizer, criterion,
-        tokenizer, MASK_ID, MASK_RATIO,
-        NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH,
-        MODEL_VERSION, NUM_MASKED
-    )
+    trainer = Trainer(device, model, optimizer, criterion, tokenizer, MASK_ID, MASK_RATIO, NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH, directory_path)
+    trainer.train()
