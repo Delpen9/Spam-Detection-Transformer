@@ -111,8 +111,8 @@ def train(
                     
                     elif MODEL_VERSION == 2:
                         outputs = model(inputs)
-                        reshaped_outputs = torch.transpose(outputs, -1, -2).view(-1, 30522).clone()
-                        desired_target = targets.gather(dim = 1, index = torch.tensor(mask_indices_list)).view(-1)
+                        reshaped_outputs = outputs.view(-1, outputs.size(-1)).clone()
+                        desired_target = targets.view(-1).clone()
 
                     # Calculate loss
                     loss = criterion(reshaped_outputs, desired_target)
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     LEARNING_RATE = 1e-2
 
     # Select particular model to use
-    MODEL_VERSION = 1
+    MODEL_VERSION = 2
 
     # MASK ID for BERT Tokenizer
     MASK_ID = 103

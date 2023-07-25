@@ -33,12 +33,8 @@ class MaskedLanguageModel(nn.Module):
         self.batch_size = batch_size
         self.num_masked = num_masked
 
-        self.fc1 = nn.Linear(embed_dim, vocab_size)
-        self.fc2 = nn.Linear(seq_len, num_masked)
+        self.fc = nn.Linear(embed_dim, vocab_size)
 
     def forward(self, x):
-        x = self.fc1(x)
-        x = x.permute(0, -1, -2)
-        x = self.fc2(x)
-        x = x.permute(0, -1, -2)
+        x = self.fc(x)
         return x
