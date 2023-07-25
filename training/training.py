@@ -146,8 +146,9 @@ if __name__ == '__main__':
     NUM_BLOCKS = 12
     DROPOUT = 0.1
     SEQ_LENGTH = 32
+    MASK_RATIO = 0.15
     NUM_LAYERS = 1 # Specific to model 2: Increases number of parameters in the model (keep to 1 on cpu)
-    NUM_MASKED = int(SEQ_LENGTH * 0.15) # Specific to model 2
+    NUM_MASKED = int(SEQ_LENGTH * MASK_RATIO) # Specific to model 2
 
     # Training Hyperparameters
     LEARNING_RATE = 1e-2
@@ -186,7 +187,6 @@ if __name__ == '__main__':
 
     # MASK ID for BERT Tokenizer
     MASK_ID = 103
-    MASK_RATIO = 0.15
 
     # Perform training procedure
     NUM_EPOCHS = 10
