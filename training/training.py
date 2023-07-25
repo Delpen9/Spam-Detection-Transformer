@@ -77,50 +77,24 @@ class Trainer:
             mask_indices = torch.min(mask_indices, torch.tensor(self.MAX_LENGTH - 1))
             inputs[i][mask_indices] = self.MASK_ID
 
-    # def calculation_validation_loss(self, model, sentences):
-    #     # Assuming that 'model' is your neural network and 'val_loader' is your validation data loader
-    #     model.eval() # Switch the model to evaluation mode.
-
-    #     # Initialize loss
-    #     validation_loss = 0.0
-
-    #     # We are not training, so we don't need to calculate gradients.
-    #     with torch.no_grad():
-    #         for data, target in val_loader:
-    #             data, target = data.to(device), target.to(device) # if you are using GPU
-    #             outputs = model(data)
-    #             loss = criterion(outputs, target)  # Compute loss
-    #             validation_loss += loss.item() * data.size(0)
-
-    #     # Compute the average loss over the entire validation set
-    #     validation_loss = validation_loss / len(val_loader.dataset)
-
-    #     print("Validation Loss: {:.6f}\n".format(validation_loss))
-
     def train(self):
         for epoch in range(self.NUM_EPOCHS):
             for iteration in range(self.NUM_ITERATIONS):
-                while True:
-                    try:
-                        sentences = self.get_batch()
+                sentences = self.get_batch()
 
-                        inputs, targets = self.encode_sentences(sentences)
-                        self.mask_inputs(inputs, sentences)
+                inputs, targets = self.encode_sentences(sentences)
+                self.mask_inputs(inputs, sentences)
 
-                        outputs = self.model(inputs)
-                        reshaped_outputs = outputs.view(-1, outputs.size(-1)).clone()
-                        desired_target = targets.view(-1).clone()
+                outputs = self.model(inputs)
+                reshaped_outputs = outputs.view(-1, outputs.size(-1)).clone()
+                desired_target = targets.view(-1).clone()
 
-                        loss = self.criterion(reshaped_outputs, desired_target)
-                        self.optimizer.zero_grad()
-                        loss.backward()
-                        self.optimizer.step()
+                loss = self.criterion(reshaped_outputs, desired_target)
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
 
-                        print(f'Epoch: {epoch + 1}, Iteration: {iteration + 1}, Loss: {loss.item()}')
-                        break
-                    except Exception as exception:
-                        print(f'This error occurred due to an occasional issue with the masking during model training: \n {exception}')
-
+                print(f'Epoch: {epoch + 1}, Iteration: {iteration + 1}, Loss: {loss.item()}')
 
 if __name__ == '__main__':
     np.random.seed(1234)
