@@ -121,7 +121,7 @@ if __name__ == '__main__':
     MASK_ID = 103
     NUM_EPOCHS = 10
     NUM_ITERATIONS = 1000
-    BATCH_SIZE = 8
+    BATCH_SIZE = 256
 
     if MODEL_VERSION == 1:
         model = Model1Transformer(
