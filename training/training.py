@@ -21,6 +21,9 @@ import numpy as np
 
 class Trainer:
     def __init__(self, device, model, optimizer, criterion, tokenizer, MASK_ID, MASK_RATIO, NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH, directory_path):
+        '''
+        '''
+        super().__init__()
         self.device = device
         self.model = model.to(self.device)
         self.optimizer = optimizer
@@ -67,16 +70,12 @@ class Trainer:
         return (inputs, targets)
 
     def mask_inputs(self, inputs, sentences):
-        mask_indices_list = []
         for i in range(self.BATCH_SIZE):
             unpadded_sentence_len = len(sentences[i])
             num_masks = int(unpadded_sentence_len * self.MASK_RATIO)
             mask_indices = torch.randperm(n = unpadded_sentence_len)[:num_masks]
             mask_indices = torch.min(mask_indices, torch.tensor(self.MAX_LENGTH - 1))
-            mask_indices_list.append(mask_indices.tolist())
             inputs[i][mask_indices] = self.MASK_ID
-
-        return (mask_indices_list, inputs)
 
     def train(self):
         for epoch in range(self.NUM_EPOCHS):
@@ -99,9 +98,8 @@ class Trainer:
 
                         print(f'Epoch: {epoch + 1}, Iteration: {iteration + 1}, Loss: {loss.item()}')
                         break
-                    except Exception as e:
-                        print('This error occurred due to an occasional issue with the masking during model training.')
-                        print(e)
+                    except Exception as exception:
+                        print(f'This error occurred due to an occasional issue with the masking during model training: \n {exception}')
 
 
 if __name__ == '__main__':
