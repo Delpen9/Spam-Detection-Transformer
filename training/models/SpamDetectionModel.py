@@ -4,17 +4,17 @@ from torch import nn
 import torch.nn.functional as F
 
 class SpamDetectionModel(nn.Module):
-    def __init__(self, model, embed_dim, n_classes=2):
+    def __init__(self, model, embed_dim, n_classes = 2):
         super().__init__()
         self.model = model
         self.linear = nn.Linear(embed_dim, n_classes)
 
-    def forward(self, x_in):
+    def forward(self, x):
         # Feed into transformer encoder
-        out = self.model(x_in)  # shape of out N*T*D
+        out = self.model(x)  # shape of out (N, T, D)
 
         # Gather the last relevant hidden state
-        out = out[:, -1, :]  # N*D
+        out = out[:, -1, :]  # (N, D)
 
         # FC layer
         y_prob = self.linear(out)

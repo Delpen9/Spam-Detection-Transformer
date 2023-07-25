@@ -77,6 +77,26 @@ class Trainer:
             mask_indices = torch.min(mask_indices, torch.tensor(self.MAX_LENGTH - 1))
             inputs[i][mask_indices] = self.MASK_ID
 
+    # def calculation_validation_loss(self, model, sentences):
+    #     # Assuming that 'model' is your neural network and 'val_loader' is your validation data loader
+    #     model.eval() # Switch the model to evaluation mode.
+
+    #     # Initialize loss
+    #     validation_loss = 0.0
+
+    #     # We are not training, so we don't need to calculate gradients.
+    #     with torch.no_grad():
+    #         for data, target in val_loader:
+    #             data, target = data.to(device), target.to(device) # if you are using GPU
+    #             outputs = model(data)
+    #             loss = criterion(outputs, target)  # Compute loss
+    #             validation_loss += loss.item() * data.size(0)
+
+    #     # Compute the average loss over the entire validation set
+    #     validation_loss = validation_loss / len(val_loader.dataset)
+
+    #     print("Validation Loss: {:.6f}\n".format(validation_loss))
+
     def train(self):
         for epoch in range(self.NUM_EPOCHS):
             for iteration in range(self.NUM_ITERATIONS):
