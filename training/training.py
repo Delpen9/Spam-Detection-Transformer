@@ -94,7 +94,7 @@ class Trainer:
                 loss.backward()
                 self.optimizer.step()
 
-                print(f'Epoch: {epoch + 1}, Iteration: {iteration + 1}, Loss: {loss.item()}')
+                print(f'Epoch: {epoch + 1} of {self.NUM_EPOCHS}, Iteration: {iteration + 1} of {self.NUM_ITERATIONS}, Loss: {loss.item()}')
 
 if __name__ == '__main__':
     np.random.seed(1234)
@@ -107,15 +107,15 @@ if __name__ == '__main__':
     FF_DIM = 3072
     NUM_BLOCKS = 1
     DROPOUT = 0.2
-    SEQ_LENGTH = 32
+    SEQ_LENGTH = 64
     MASK_RATIO = 0.15
     EXPANSION_FACTOR = 4
     LEARNING_RATE = 1e-2
     MODEL_VERSION = 2
     MASK_ID = 103
     NUM_EPOCHS = 10
-    NUM_ITERATIONS = 1000
-    BATCH_SIZE = 256
+    BATCH_SIZE = 64
+    NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE)
 
     if MODEL_VERSION == 1:
         model = Model1Transformer(
