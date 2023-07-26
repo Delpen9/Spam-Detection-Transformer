@@ -75,6 +75,10 @@ class Trainer:
                 sentences.extend([sentence.split() for sentence in file_sentences])
 
         return sentences
+    
+    def chunks(self, sentences):
+        for i in range(0, len(sentences), self.BATCH_SIZE):
+            yield sentences[i : i + self.BATCH_SIZE]
 
     def calculate_validation_loss(self):
         self.model.eval()
@@ -82,14 +86,17 @@ class Trainer:
         validation_loss = 0.0
 
         with torch.no_grad():
-                sentences = self.get_validation_samples()
-                inputs, targets = self.encode_sentences(sentences)
-                self.mask_inputs(inputs, sentences)
+            sentences = self.get_validation_samples()
+            num_batches = 0
+            for batch in self.chunks(sentences):
+                inputs, targets = self.encode_sentences(batch)
+                self.mask_inputs(inputs, batch)
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, targets)
                 validation_loss += loss.item() * inputs.size(0)
+                num_batches += 1
 
-        validation_loss = validation_loss / len(val_loader.dataset)
+        validation_loss /= num_batches
 
         return validation_loss
 
@@ -161,7 +168,7 @@ if __name__ == '__main__':
     MASK_ID = 103
     NUM_EPOCHS = 10
     BATCH_SIZE = 64
-    VALIDATION_RATIO = 0.01
+    VALIDATION_RATIO = 0.05
     NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO))
 
     if MODEL_VERSION == 1:
