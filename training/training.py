@@ -277,11 +277,11 @@ class MLMTrainer:
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
         if self.SAVE_OUTPUT == True:
-            self.training_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/training_output_{timestamp}.csv')
-            self.validation_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/validation_output_{timestamp}.csv')
+            self.training_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/training_output_{timestamp}.csv', index = False)
+            self.validation_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/validation_output_{timestamp}.csv', index = False)
 
         if self.SAVE_MODEL == True:
-            dump(self.model, f'{MODEL_OUTPUT_PATH}/model_{timestamp}.csv')
+            dump(self.model, f'{MODEL_OUTPUT_PATH}/model_{timestamp}.joblib')
 
 if __name__ == '__main__':
     np.random.seed(1234)
