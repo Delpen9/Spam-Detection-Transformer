@@ -278,7 +278,7 @@ class MLMTrainer:
 
         if self.SAVE_OUTPUT == True:
             self.training_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/training_output_{timestamp}.csv')
-            self.validation_output.to_csv(f'{self.VALIDATION_OUTPUT_PATH}/validation_output_{timestamp}.csv')
+            self.validation_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/validation_output_{timestamp}.csv')
 
         if self.SAVE_MODEL == True:
             dump(self.model, f'{MODEL_OUTPUT_PATH}/model_{timestamp}.csv')
