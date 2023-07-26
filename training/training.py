@@ -26,7 +26,9 @@ class Trainer:
         device, model, optimizer, criterion,
         tokenizer, MASK_ID, MASK_RATIO,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH,
-        directory_path, VALIDATION_RATIO, VALIDATION_COUNT = None):
+        directory_path, VALIDATION_RATIO, VALIDATION_COUNT = None,
+        SAVE_OUTPUT = False, SAVE_MODEL = False,
+        TRAINING_OUTPUT_PATH = '', MODEL_OUTPUT_PATH = ''):
         '''
         '''
         super().__init__()
@@ -44,6 +46,10 @@ class Trainer:
         self.directory_path = directory_path
         self.VALIDATION_RATIO = VALIDATION_RATIO
         self.VALIDATION_COUNT = VALIDATION_COUNT
+        self.SAVE_OUTPUT = SAVE_OUTPUT
+        self.SAVE_MODEL = SAVE_MODEL
+        self.TRAINING_OUTPUT_PATH = TRAINING_OUTPUT_PATH
+        self.MODEL_OUTPUT_PATH = MODEL_OUTPUT_PATH
 
     def get_training_batch(self):
         sentences = []
@@ -156,8 +162,8 @@ class Trainer:
                 loss.backward()
                 self.optimizer.step()
 
-                if iteration % 10 == 0:
-                    print('#' * 25)
+                if iteration % 50 == 0:
+                    print('\n' + '#' * 25)
                     print('Calculate validation loss')
                     print('#' * 25)
                     validation_loss = self.calculate_validation_loss()
@@ -193,6 +199,11 @@ if __name__ == '__main__':
     VALIDATION_COUNT = 1 # Overrides validation ratio; represents number of files used for validation calculation
     NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
                     else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
+
+    SAVE_OUTPUT = True
+    SAVE_MODEL = True
+    TRAINING_OUTPUT_PATH = '../output'
+    MODEL_OUTPUT_PATH = '../artifacts'
 
     if MODEL_VERSION == 1:
         model = Model1Transformer(
