@@ -20,7 +20,12 @@ import torch.nn as nn
 import numpy as np
 
 class Trainer:
-    def __init__(self, device, model, optimizer, criterion, tokenizer, MASK_ID, MASK_RATIO, NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH, directory_path, VALIDATION_RATIO):
+    def __init__(
+        self,
+        device, model, optimizer, criterion,
+        tokenizer, MASK_ID, MASK_RATIO,
+        NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH,
+        directory_path, VALIDATION_RATIO, VALIDATION_COUNT = None):
         '''
         '''
         super().__init__()
@@ -37,13 +42,14 @@ class Trainer:
         self.MAX_LENGTH = MAX_LENGTH
         self.directory_path = directory_path
         self.VALIDATION_RATIO = VALIDATION_RATIO
+        self.VALIDATION_COUNT = VALIDATION_COUNT
 
     def get_training_batch(self):
         sentences = []
         directory_list = os.listdir(self.directory_path)
 
         num_files = len(directory_list)
-        validation_count = int(num_files * self.VALIDATION_RATIO)
+        validation_count = int(num_files * self.VALIDATION_RATIO) if self.VALIDATION_COUNT == None else self.VALIDATION_COUNT
         training_count = num_files - validation_count
         file_probabilities = list(np.concatenate((
             np.zeros(validation_count),
@@ -66,7 +72,7 @@ class Trainer:
         directory_list = os.listdir(self.directory_path)
 
         num_files = len(directory_list)
-        validation_count = int(num_files * self.VALIDATION_RATIO)
+        validation_count = int(num_files * self.VALIDATION_RATIO) if self.VALIDATION_COUNT == None else self.VALIDATION_COUNT
         filenames = directory_list[:validation_count]
 
         for filename in filenames:
@@ -91,8 +97,12 @@ class Trainer:
             for batch in self.chunks(sentences):
                 inputs, targets = self.encode_sentences(batch)
                 self.mask_inputs(inputs, batch)
+
                 outputs = self.model(inputs)
-                loss = self.criterion(outputs, targets)
+                reshaped_outputs = outputs.view(-1, outputs.size(-1)).clone()
+                desired_target = targets.view(-1).clone()
+
+                loss = self.criterion(reshaped_outputs, desired_target)
                 validation_loss += loss.item() * inputs.size(0)
                 num_batches += 1
 
@@ -143,7 +153,8 @@ class Trainer:
                 loss.backward()
                 self.optimizer.step()
 
-                if iteration != 0 and iteration % 10 == 0:
+                # iteration != 0 and 
+                if iteration % 10 == 0:
                     validation_loss = self.calculate_validation_loss()
                     print(f'Validation loss: {validation_loss}')
 
@@ -169,7 +180,9 @@ if __name__ == '__main__':
     NUM_EPOCHS = 10
     BATCH_SIZE = 64
     VALIDATION_RATIO = 0.05
-    NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO))
+    VALIDATION_COUNT = 10
+    NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
+                    else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
 
     if MODEL_VERSION == 1:
         model = Model1Transformer(
