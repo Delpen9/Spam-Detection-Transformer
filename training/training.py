@@ -153,8 +153,7 @@ class Trainer:
                 loss.backward()
                 self.optimizer.step()
 
-                # iteration != 0 and 
-                if iteration % 10 == 0:
+                if iteration != 0 and iteration % 10 == 0:
                     validation_loss = self.calculate_validation_loss()
                     print(f'Validation loss: {validation_loss}')
 
@@ -169,18 +168,18 @@ if __name__ == '__main__':
     EMBED_DIM = 768
     NUM_HEADS = 12
     FF_DIM = 3072
-    NUM_BLOCKS = 10
+    NUM_BLOCKS = 1 # TODO: Increase on GPU
     DROPOUT = 0.2
-    SEQ_LENGTH = 64
+    SEQ_LENGTH = 64 # TODO: Increase on GPU
     MASK_RATIO = 0.15
     EXPANSION_FACTOR = 4
     LEARNING_RATE = 1e-2
     MODEL_VERSION = 2
     MASK_ID = 103
     NUM_EPOCHS = 10
-    BATCH_SIZE = 64
-    VALIDATION_RATIO = 0.05
-    VALIDATION_COUNT = 10
+    BATCH_SIZE = 8 # TODO: Increase on GPU
+    VALIDATION_RATIO = 0.05 # Used if VALIDATION_COUNT = None
+    VALIDATION_COUNT = 1 # Overrides validation ratio; represents number of files used for validation calculation
     NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
                     else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
 
