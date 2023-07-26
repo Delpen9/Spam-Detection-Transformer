@@ -93,7 +93,6 @@ class Trainer:
 
         with torch.no_grad():
             sentences = self.get_validation_samples()
-            num_batches = 0
             for batch in self.chunks(sentences):
                 inputs, targets = self.encode_sentences(batch)
                 self.mask_inputs(inputs, batch)
@@ -104,9 +103,8 @@ class Trainer:
 
                 loss = self.criterion(reshaped_outputs, desired_target)
                 validation_loss += loss.item() * inputs.size(0)
-                num_batches += 1
 
-        validation_loss /= num_batches
+        validation_loss /= float(len(sentences) / self.BATCH_SIZE)
 
         return validation_loss
 
@@ -153,7 +151,7 @@ class Trainer:
                 loss.backward()
                 self.optimizer.step()
 
-                if iteration != 0 and iteration % 10 == 0:
+                if iteration % 10 == 0:
                     validation_loss = self.calculate_validation_loss()
                     print(f'Validation loss: {validation_loss}')
 
@@ -170,14 +168,14 @@ if __name__ == '__main__':
     FF_DIM = 3072
     NUM_BLOCKS = 1 # TODO: Increase on GPU
     DROPOUT = 0.2
-    SEQ_LENGTH = 64 # TODO: Increase on GPU
+    SEQ_LENGTH = 16 # TODO: Increase on GPU
     MASK_RATIO = 0.15
     EXPANSION_FACTOR = 4
     LEARNING_RATE = 1e-2
     MODEL_VERSION = 2
     MASK_ID = 103
     NUM_EPOCHS = 10
-    BATCH_SIZE = 8 # TODO: Increase on GPU
+    BATCH_SIZE = 256 # TODO: Increase on GPU
     VALIDATION_RATIO = 0.05 # Used if VALIDATION_COUNT = None
     VALIDATION_COUNT = 1 # Overrides validation ratio; represents number of files used for validation calculation
     NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
