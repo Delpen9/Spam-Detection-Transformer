@@ -20,7 +20,7 @@ import torch.nn as nn
 import numpy as np
 
 class Trainer:
-    def __init__(self, device, model, optimizer, criterion, tokenizer, MASK_ID, MASK_RATIO, NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH, directory_path, validation_ratio):
+    def __init__(self, device, model, optimizer, criterion, tokenizer, MASK_ID, MASK_RATIO, NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH, directory_path, VALIDATION_RATIO):
         '''
         '''
         super().__init__()
@@ -36,14 +36,14 @@ class Trainer:
         self.BATCH_SIZE = BATCH_SIZE
         self.MAX_LENGTH = MAX_LENGTH
         self.directory_path = directory_path
-        self.validation_ratio = validation_ratio
+        self.VALIDATION_RATIO = VALIDATION_RATIO
 
     def get_training_batch(self):
         sentences = []
         directory_list = os.listdir(self.directory_path)
 
         num_files = len(directory_list)
-        validation_count = int(num_files * self.validation_ratio)
+        validation_count = int(num_files * self.VALIDATION_RATIO)
         training_count = num_files - validation_count
         file_probabilities = list(np.concatenate((
             np.zeros(validation_count),
@@ -66,7 +66,7 @@ class Trainer:
         directory_list = os.listdir(self.directory_path)
 
         num_files = len(directory_list)
-        validation_count = int(num_files * self.validation_ratio)
+        validation_count = int(num_files * self.VALIDATION_RATIO)
         filenames = directory_list[:validation_count]
 
         for filename in filenames:
@@ -75,6 +75,23 @@ class Trainer:
                 sentences.extend([sentence.split() for sentence in file_sentences])
 
         return sentences
+
+    def calculate_validation_loss(self):
+        self.model.eval()
+
+        validation_loss = 0.0
+
+        with torch.no_grad():
+                sentences = self.get_validation_samples()
+                inputs, targets = self.encode_sentences(sentences)
+                self.mask_inputs(inputs, sentences)
+                outputs = self.model(inputs)
+                loss = self.criterion(outputs, targets)
+                validation_loss += loss.item() * inputs.size(0)
+
+        validation_loss = validation_loss / len(val_loader.dataset)
+
+        return validation_loss
 
     def encode_sentences(self, sentences):
         input_list = []
@@ -119,11 +136,15 @@ class Trainer:
                 loss.backward()
                 self.optimizer.step()
 
+                if iteration != 0 and iteration % 10 == 0:
+                    validation_loss = self.calculate_validation_loss()
+                    print(f'Validation loss: {validation_loss}')
+
                 print(f'Epoch: {epoch + 1} of {self.NUM_EPOCHS}, Iteration: {iteration + 1} of {self.NUM_ITERATIONS}, Loss: {loss.item()}')
 
 if __name__ == '__main__':
     np.random.seed(1234)
-    directory_path = '../data/masking/openwebtext/openwebtext'
+    DIRECTORY_PATH = '../data/masking/openwebtext/openwebtext'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     VOCAB_SIZE = 30522
@@ -140,8 +161,8 @@ if __name__ == '__main__':
     MASK_ID = 103
     NUM_EPOCHS = 10
     BATCH_SIZE = 64
-    validation_ratio = 0.05
-    NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - validation_ratio))
+    VALIDATION_RATIO = 0.01
+    NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO))
 
     if MODEL_VERSION == 1:
         model = Model1Transformer(
@@ -175,7 +196,7 @@ if __name__ == '__main__':
         device, model, optimizer, criterion,
         tokenizer, MASK_ID, MASK_RATIO,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH,
-        directory_path, validation_ratio
+        DIRECTORY_PATH, VALIDATION_RATIO
     )
 
     trainer.train()
