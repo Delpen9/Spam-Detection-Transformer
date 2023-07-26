@@ -278,7 +278,7 @@ class MLMTrainer:
 
         if self.SAVE_OUTPUT == True:
             self.training_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/training_output_{timestamp}.csv', index = False)
-            self.validation_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/validation_output_{timestamp}.csv', index = False)
+            self.validation_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/training_output_{timestamp}.csv', index = False)
 
         if self.SAVE_MODEL == True:
             dump(self.model, f'{MODEL_OUTPUT_PATH}/model_{timestamp}.joblib')
@@ -300,14 +300,14 @@ if __name__ == '__main__':
     LEARNING_RATE = 1e-2
     MODEL_VERSION = 2
     MASK_ID = 103
-    NUM_EPOCHS = 10
-    # NUM_EPOCHS = 1 # TODO: Delete
+    # NUM_EPOCHS = 10
+    NUM_EPOCHS = 1 # TODO: Delete
     BATCH_SIZE = 256 # TODO: Increase on GPU
     VALIDATION_RATIO = 0.05 # Used if VALIDATION_COUNT = None
     VALIDATION_COUNT = 1 # Overrides validation ratio; represents number of files used for validation calculation
     NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
                     else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
-    # NUM_ITERATIONS = 50 # TODO: Delete
+    NUM_ITERATIONS = 50 # TODO: Delete
 
     SAVE_OUTPUT = True
     SAVE_MODEL = True
