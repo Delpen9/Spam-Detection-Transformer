@@ -354,7 +354,9 @@ if __name__ == '__main__':
         device, model, optimizer, criterion,
         tokenizer, MASK_ID, MASK_RATIO,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH,
-        DIRECTORY_PATH, VALIDATION_RATIO, VALIDATION_COUNT
+        DIRECTORY_PATH, VALIDATION_RATIO, VALIDATION_COUNT,
+        SAVE_OUTPUT, SAVE_MODEL,
+        TRAINING_OUTPUT_PATH, MODEL_OUTPUT_PATH
     )
 
     trainer.train()
