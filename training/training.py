@@ -11,14 +11,19 @@ from models.PretrainedOnMLM import PretrainedOnMLM
 from models.SpamDetectionModel import SpamDetectionModel
 from models.DistilledFromTinyBert import DistilledFromTinyBert
 
-# Directory Library
+# Directory Libraries
 import os
+from datetime import datetime
 
 # Standard Data Science Libraries
 import torch
 import torch.nn as nn
 import numpy as np
+import pandas as pd
 import math
+
+# Serialize and De-Serialize Model
+from joblib import dump
 
 class Trainer:
     def __init__(
@@ -36,20 +41,28 @@ class Trainer:
         self.model = model.to(self.device)
         self.optimizer = optimizer
         self.criterion = criterion
+
         self.tokenizer = tokenizer
         self.MASK_ID = MASK_ID
         self.MASK_RATIO = MASK_RATIO
+
         self.NUM_EPOCHS = NUM_EPOCHS
         self.NUM_ITERATIONS = NUM_ITERATIONS
+
         self.BATCH_SIZE = BATCH_SIZE
         self.MAX_LENGTH = MAX_LENGTH
+
         self.directory_path = directory_path
         self.VALIDATION_RATIO = VALIDATION_RATIO
         self.VALIDATION_COUNT = VALIDATION_COUNT
+
         self.SAVE_OUTPUT = SAVE_OUTPUT
         self.SAVE_MODEL = SAVE_MODEL
         self.TRAINING_OUTPUT_PATH = TRAINING_OUTPUT_PATH
         self.MODEL_OUTPUT_PATH = MODEL_OUTPUT_PATH
+
+        self.training_output = pd.DataFrame([], columns = ['epoch', 'iteration', 'loss'])
+        self.validation_output = pd.DataFrame([], columns = ['epoch', 'iteration', 'loss'])
 
     def get_training_batch(self):
         sentences = []
@@ -173,8 +186,34 @@ class Trainer:
                     print('#' * 25)
                     print('Training loss')
                     print('#' * 25)
+                    self.validation_output = pd.concat([
+                        self.validation_output,
+                        pd.DataFrame({
+                            'epoch': [epoch + 1],
+                            'iteration': [iteration + 1],
+                            'loss': [validation_loss]
+                        })], ignore_index = True
+                    )
 
                 print(f'Epoch: {epoch + 1} of {self.NUM_EPOCHS}, Iteration: {iteration + 1} of {self.NUM_ITERATIONS}, Loss: {loss.item()}')
+                
+                self.training_output = pd.concat([
+                    self.training_output,
+                    pd.DataFrame({
+                        'epoch': [epoch + 1],
+                        'iteration': [iteration + 1],
+                        'loss': [loss.item()]
+                    })], ignore_index = True
+                )
+
+        timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+
+        if self.SAVE_OUTPUT == True:
+            self.training_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/training_output_{timestamp}.csv')
+            self.validation_output.to_csv(f'{self.VALIDATION_OUTPUT_PATH}/validation_output_{timestamp}.csv')
+
+        if self.SAVE_MODEL == True:
+            dump(self.model, f'{MODEL_OUTPUT_PATH}/model_{timestamp}.csv')
 
 if __name__ == '__main__':
     np.random.seed(1234)
@@ -193,41 +232,51 @@ if __name__ == '__main__':
     LEARNING_RATE = 1e-2
     MODEL_VERSION = 2
     MASK_ID = 103
-    NUM_EPOCHS = 10
+    # NUM_EPOCHS = 10
+    NUM_EPOCHS = 1 # TODO: Delete
     BATCH_SIZE = 256 # TODO: Increase on GPU
     VALIDATION_RATIO = 0.05 # Used if VALIDATION_COUNT = None
     VALIDATION_COUNT = 1 # Overrides validation ratio; represents number of files used for validation calculation
-    NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
-                    else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
+    # NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
+    #                 else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
+    NUM_ITERATIONS = 50 # TODO: Delete
 
     SAVE_OUTPUT = True
     SAVE_MODEL = True
     TRAINING_OUTPUT_PATH = '../output'
     MODEL_OUTPUT_PATH = '../artifacts'
 
-    if MODEL_VERSION == 1:
-        model = Model1Transformer(
-            vocab_size = VOCAB_SIZE,
-            embed_dim = EMBED_DIM,
-            num_heads = NUM_HEADS,
-            ff_dim = FF_DIM,
-            num_blocks = NUM_BLOCKS,
-            dropout = DROPOUT
-        ).to(device)
-        optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
-        criterion = nn.CrossEntropyLoss()
+    LOAD_MODEL = False
+    LOAD_MODEL_PATH = ''
 
-    elif MODEL_VERSION == 2:
-        transformer_encoder = TransformerEncoder(
-            seq_len = SEQ_LENGTH,
-            vocab_size = VOCAB_SIZE,
-            embed_dim = EMBED_DIM,
-            num_layers = NUM_BLOCKS,
-            expansion_factor = EXPANSION_FACTOR,
-            n_heads = NUM_HEADS,
-            dropout = DROPOUT
-        ).to(device)
-        model = PretrainedOnMLM(transformer_encoder, EMBED_DIM, VOCAB_SIZE).to(device)
+    if LOAD_MODEL == False:
+        if MODEL_VERSION == 1:
+            model = Model1Transformer(
+                vocab_size = VOCAB_SIZE,
+                embed_dim = EMBED_DIM,
+                num_heads = NUM_HEADS,
+                ff_dim = FF_DIM,
+                num_blocks = NUM_BLOCKS,
+                dropout = DROPOUT
+            ).to(device)
+            optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
+            criterion = nn.CrossEntropyLoss()
+
+        elif MODEL_VERSION == 2:
+            transformer_encoder = TransformerEncoder(
+                seq_len = SEQ_LENGTH,
+                vocab_size = VOCAB_SIZE,
+                embed_dim = EMBED_DIM,
+                num_layers = NUM_BLOCKS,
+                expansion_factor = EXPANSION_FACTOR,
+                n_heads = NUM_HEADS,
+                dropout = DROPOUT
+            ).to(device)
+            model = PretrainedOnMLM(transformer_encoder, EMBED_DIM, VOCAB_SIZE).to(device)
+            optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
+            criterion = nn.CrossEntropyLoss()
+    else:
+        model = load(f'{LOAD_MODEL_PATH}')
         optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
         criterion = nn.CrossEntropyLoss()
 
