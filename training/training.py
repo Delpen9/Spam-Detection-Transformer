@@ -18,6 +18,7 @@ import os
 import torch
 import torch.nn as nn
 import numpy as np
+import math
 
 class Trainer:
     def __init__(
@@ -84,7 +85,9 @@ class Trainer:
     
     def chunks(self, sentences):
         for i in range(0, len(sentences), self.BATCH_SIZE):
-            yield sentences[i : i + self.BATCH_SIZE]
+            chunk = sentences[i : i + self.BATCH_SIZE]
+            if len(chunk) == self.BATCH_SIZE:
+                yield chunk
 
     def calculate_validation_loss(self):
         self.model.eval()
@@ -100,11 +103,13 @@ class Trainer:
                 outputs = self.model(inputs)
                 reshaped_outputs = outputs.view(-1, outputs.size(-1)).clone()
                 desired_target = targets.view(-1).clone()
-
                 loss = self.criterion(reshaped_outputs, desired_target)
-                validation_loss += loss.item() * inputs.size(0)
 
-        validation_loss /= float(len(sentences) / self.BATCH_SIZE)
+                print(f'Validation loss for batch: {loss.item()}')
+
+                validation_loss += loss.item()
+
+        validation_loss /= float(math.floor(len(sentences) / self.BATCH_SIZE))
 
         return validation_loss
 
@@ -152,8 +157,16 @@ class Trainer:
                 self.optimizer.step()
 
                 if iteration % 10 == 0:
+                    print('#' * 25)
+                    print('Calculate validation loss')
+                    print('#' * 25)
                     validation_loss = self.calculate_validation_loss()
-                    print(f'Validation loss: {validation_loss}')
+                    print('#' * 25)
+                    print(f'Average validation loss for all batches: {validation_loss}')
+                    print('#' * 25 + '\n')
+                    print('#' * 25)
+                    print('Training loss')
+                    print('#' * 25)
 
                 print(f'Epoch: {epoch + 1} of {self.NUM_EPOCHS}, Iteration: {iteration + 1} of {self.NUM_ITERATIONS}, Loss: {loss.item()}')
 
@@ -213,7 +226,7 @@ if __name__ == '__main__':
         device, model, optimizer, criterion,
         tokenizer, MASK_ID, MASK_RATIO,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH,
-        DIRECTORY_PATH, VALIDATION_RATIO
+        DIRECTORY_PATH, VALIDATION_RATIO, VALIDATION_COUNT
     )
 
     trainer.train()
