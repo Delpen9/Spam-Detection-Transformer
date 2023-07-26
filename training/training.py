@@ -20,7 +20,7 @@ import torch.nn as nn
 import numpy as np
 
 class Trainer:
-    def __init__(self, device, model, optimizer, criterion, tokenizer, MASK_ID, MASK_RATIO, NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH, directory_path):
+    def __init__(self, device, model, optimizer, criterion, tokenizer, MASK_ID, MASK_RATIO, NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH, directory_path, validation_ratio):
         '''
         '''
         super().__init__()
@@ -36,11 +36,21 @@ class Trainer:
         self.BATCH_SIZE = BATCH_SIZE
         self.MAX_LENGTH = MAX_LENGTH
         self.directory_path = directory_path
+        self.validation_ratio = validation_ratio
 
-    def get_batch(self):
+    def get_training_batch(self):
         sentences = []
         directory_list = os.listdir(self.directory_path)
-        filename_idx = np.random.choice(len(directory_list), 1)[0]
+
+        num_files = len(directory_list)
+        validation_count = int(num_files * self.validation_ratio)
+        training_count = num_files - validation_count
+        file_probabilities = list(np.concatenate((
+            np.zeros(validation_count),
+            np.ones(training_count) / training_count
+        )))
+
+        filename_idx = np.random.choice(len(directory_list), 1, p = file_probabilities)[0]
         filename = directory_list[filename_idx]
 
         with open(os.path.join(self.directory_path, filename), 'r') as f:
@@ -48,6 +58,21 @@ class Trainer:
             batch_indices = np.random.choice(len(file_sentences), self.BATCH_SIZE, replace = False)
             batch_sentences = [file_sentences[batch_idx] for batch_idx in batch_indices]
             sentences.extend([sentence.split() for sentence in batch_sentences])
+
+        return sentences
+
+    def get_validation_samples(self):
+        sentences = []
+        directory_list = os.listdir(self.directory_path)
+
+        num_files = len(directory_list)
+        validation_count = int(num_files * self.validation_ratio)
+        filenames = directory_list[:validation_count]
+
+        for filename in filenames:
+            with open(os.path.join(self.directory_path, filename), 'r') as f:
+                file_sentences = f.read().lower().strip().split('\n')
+                sentences.extend([sentence.split() for sentence in file_sentences])
 
         return sentences
 
@@ -80,7 +105,7 @@ class Trainer:
     def train(self):
         for epoch in range(self.NUM_EPOCHS):
             for iteration in range(self.NUM_ITERATIONS):
-                sentences = self.get_batch()
+                sentences = self.get_training_batch()
 
                 inputs, targets = self.encode_sentences(sentences)
                 self.mask_inputs(inputs, sentences)
@@ -105,7 +130,7 @@ if __name__ == '__main__':
     EMBED_DIM = 768
     NUM_HEADS = 12
     FF_DIM = 3072
-    NUM_BLOCKS = 1
+    NUM_BLOCKS = 10
     DROPOUT = 0.2
     SEQ_LENGTH = 64
     MASK_RATIO = 0.15
@@ -115,7 +140,8 @@ if __name__ == '__main__':
     MASK_ID = 103
     NUM_EPOCHS = 10
     BATCH_SIZE = 64
-    NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE)
+    validation_ratio = 0.05
+    NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - validation_ratio))
 
     if MODEL_VERSION == 1:
         model = Model1Transformer(
@@ -145,5 +171,11 @@ if __name__ == '__main__':
 
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
 
-    trainer = Trainer(device, model, optimizer, criterion, tokenizer, MASK_ID, MASK_RATIO, NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH, directory_path)
+    trainer = Trainer(
+        device, model, optimizer, criterion,
+        tokenizer, MASK_ID, MASK_RATIO,
+        NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH,
+        directory_path, validation_ratio
+    )
+
     trainer.train()
