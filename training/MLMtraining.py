@@ -232,6 +232,33 @@ class MLMTrainer:
             mask_indices = torch.min(mask_indices, torch.tensor(self.MAX_LENGTH - 1))
             inputs[i][mask_indices] = self.MASK_ID
 
+    def process_outputs(self):
+        '''
+        Processes the output dataframes for training and validation sets. 
+
+        For the training output, it resets the index twice: the first reset is done with dropping the original 
+        index, resulting in the default integer index. The second reset adds the default index as a new column 
+        and resets the index again to the default integer index. The added index column is then renamed to 'step'.
+
+        For the validation output, each row is duplicated 'VALIDATION_EVALUATION_FREQUENCY' number of times. Then,
+        it resets the index in the same way as for the training output. After these steps, an 'iteration' column 
+        is added to the validation output dataframe, which is derived from the 'iteration' column in the 
+        training output dataframe.
+
+        Note: The function directly modifies the 'training_output' and 'validation_output' attributes of the class.
+        '''
+        self.training_output = self.training_output.reset_index(drop = True).reset_index(drop = False) \
+                                .rename(columns = {'index': 'step'})
+        self.validation_output = self.validation_output.reindex(
+            np.repeat(
+                self.validation_output.index.values,
+                self.VALIDATION_EVALUATION_FREQUENCY
+            )
+        )
+        self.validation_output = self.validation_output.reset_index(drop = True).reset_index(drop = False) \
+                                .rename(columns = {'index': 'step'})
+        self.validation_output['iteration'] = self.training_output['iteration']
+
     def train(self):
         '''
         Train the model using the specified optimizer and criterion. 
@@ -286,6 +313,8 @@ class MLMTrainer:
 
         self.timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
+        self.process_outputs()
+
         if self.SAVE_OUTPUT == True:
             self.training_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/training_output_{self.timestamp}.csv', index = False)
             self.validation_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/validation_output_{self.timestamp}.csv', index = False)
@@ -294,15 +323,27 @@ class MLMTrainer:
             dump(self.model, f'{MODEL_OUTPUT_PATH}/model_{self.timestamp}.joblib')
     
     def save_graphs(self):
-        fig, ax = plt.subplots(figsize = (10, 6))
+        '''
+        Plots the training and validation loss as a function of steps, and saves the resulting figure.
 
-        ax.set_xlabel('Epoch')
-        ax.set_ylabel('Loss')
+        The method creates a line plot with 'step' on the x-axis and 'loss' on the y-axis for both the training
+        and validation outputs. The training data is plotted in blue and labelled 'Train', and the validation data 
+        is plotted in orange and labelled 'Validation'. 
 
-        ax.plot(self.training_output['epoch'], self.training_output['loss'], color = 'tab:blue', label = 'Train')
-        ax.plot(self.validation_output['epoch'], self.validation_output['loss'], color = 'tab:orange', label = 'Validation')
+        The resulting plot is saved as a PNG file in the path specified by the 'GRAPH_OUTPUT_PATH' attribute 
+        of the class, with the filename 'training_validation_curves_{timestamp}.png', where '{timestamp}' is 
+        replaced by the current value of the 'timestamp' attribute of the class.
 
-        ax.legend()
+        Note: This method directly uses the 'training_output' and 'validation_output' attributes of the class.
+        '''
+        plt.figure(figsize = (10, 6))
+
+        sns.lineplot(data = self.training_output, x = 'step', y = 'loss', color = 'tab:blue', label = 'Train')
+        sns.lineplot(data = self.validation_output, x = 'step', y = 'loss', color = 'tab:orange', label = 'Validation')
+
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.legend()
 
         plt.savefig(f'{self.GRAPH_OUTPUT_PATH}/training_validation_curves_{self.timestamp}.png')
 
@@ -323,7 +364,7 @@ if __name__ == '__main__':
     LEARNING_RATE = 1e-2
     MODEL_VERSION = 2
     MASK_ID = 103 # NOTE: Specific to BERTTokenizerFast
-    NUM_EPOCHS = 10
+    NUM_EPOCHS = 3
     BATCH_SIZE = 256 # TODO: Increase on GPU
     VALIDATION_RATIO = 0.05 # NOTE: Used if VALIDATION_COUNT = None
     VALIDATION_COUNT = 1 # NOTE: Overrides validation ratio; represents number of files used for validation calculation
