@@ -361,7 +361,10 @@ class MLMTrainer:
 
         plt.legend()
 
-        plt.savefig(f'{self.GRAPH_OUTPUT_PATH}/training_validation_curves_{self.timestamp}.png')
+        plt.savefig(f'{self.GRAPH_OUTPUT_PATH}/linear_scale/training_validation_curves_{self.timestamp}.png')
+
+        plt.yscale('log')
+        plt.savefig(f'{self.GRAPH_OUTPUT_PATH}/log_scale/log_scale_training_validation_curves_{self.timestamp}.png')
 
 if __name__ == '__main__':
     np.random.seed(1234)
