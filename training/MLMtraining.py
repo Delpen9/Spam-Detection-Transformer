@@ -325,7 +325,7 @@ class MLMTrainer:
         if self.SAVE_MODEL == True:
             dump(self.model, f'{MODEL_OUTPUT_PATH}/model_{self.timestamp}.joblib')
     
-    def save_graphs(self):
+    def save_graphs(self, title = ''):
         '''
         Plots the training and validation loss as a function of steps, and saves the resulting figure.
 
@@ -344,8 +344,10 @@ class MLMTrainer:
         sns.lineplot(data = self.training_output, x = 'step', y = 'loss', color = 'tab:blue', label = 'Train')
         sns.lineplot(data = self.validation_output, x = 'step', y = 'loss', color = 'tab:orange', label = 'Validation')
 
-        plt.xlabel('Step')
-        plt.ylabel('Loss')
+        plt.title(f'{title}')
+
+        plt.xlabel(f'Step (Batch Size = {self.BATCH_SIZE})')
+        plt.ylabel('Cross Entropy Loss')
 
         min_step = min(self.training_output['step'].min(), self.validation_output['step'].min())
         max_step = max(self.training_output['step'].max(), self.validation_output['step'].max())
@@ -440,4 +442,4 @@ if __name__ == '__main__':
 
     trainer.train()
 
-    trainer.save_graphs()
+    trainer.save_graphs('Training/Validation Loss Curves for Masked Language Model')
