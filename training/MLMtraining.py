@@ -307,7 +307,7 @@ if __name__ == '__main__':
     VALIDATION_COUNT = 1 # Overrides validation ratio; represents number of files used for validation calculation
     NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
                     else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
-    NUM_ITERATIONS = 50 # TODO: Delete
+    NUM_ITERATIONS = 75 # TODO: Delete
 
     SAVE_OUTPUT = True
     SAVE_MODEL = True
