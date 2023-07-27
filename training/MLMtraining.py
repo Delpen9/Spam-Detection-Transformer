@@ -312,7 +312,7 @@ if __name__ == '__main__':
     SAVE_OUTPUT = True
     SAVE_MODEL = True
     TRAINING_OUTPUT_PATH = '../output'
-    MODEL_OUTPUT_PATH = '../artifacts'
+    MODEL_OUTPUT_PATH = '../artifacts/MLM'
 
     LOAD_MODEL = False
     LOAD_MODEL_PATH = ''
