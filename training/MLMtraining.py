@@ -42,24 +42,26 @@ class MLMTrainer:
         Initialize the MLMTrainer instance with specified parameters.
 
         Parameters:
-        device: Device to train the model on. 
-        model: Instance of the model to train.
-        optimizer: Optimizer to use for training.
-        criterion: Criterion to calculate the loss.
-        tokenizer: Tokenizer to tokenize the sentences.
-        MASK_ID: ID for the mask token.
-        MASK_RATIO: Ratio of tokens to mask in a sentence.
-        NUM_EPOCHS: Number of epochs for training.
-        NUM_ITERATIONS: Number of iterations for training.
-        BATCH_SIZE: Size of the batch for training.
-        MAX_LENGTH: Maximum length for the tokenized sentence.
-        directory_path: Path of the directory containing data.
-        VALIDATION_RATIO: Ratio of data to use for validation.
-        VALIDATION_COUNT: Count of data to use for validation.
-        SAVE_OUTPUT: Flag to decide whether to save training output or not.
-        SAVE_MODEL: Flag to decide whether to save the model or not.
-        TRAINING_OUTPUT_PATH: Path to save the training output.
-        MODEL_OUTPUT_PATH: Path to save the trained model.
+        device (str): Device to train the model on. 
+        model (obj): Instance of the model to train.
+        optimizer (obj): Optimizer to use for training.
+        criterion (obj): Criterion to calculate the loss.
+        tokenizer (obj): Tokenizer to tokenize the sentences.
+        MASK_ID (int): ID for the mask token.
+        MASK_RATIO (float): Ratio of tokens to mask in a sentence.
+        NUM_EPOCHS (int): Number of epochs for training.
+        NUM_ITERATIONS (int): Number of iterations for training.
+        BATCH_SIZE (int): Size of the batch for training.
+        MAX_LENGTH (int): Maximum length for the tokenized sentence.
+        directory_path (str): Path of the directory containing data.
+        VALIDATION_RATIO (float): Ratio of data to use for validation.
+        VALIDATION_COUNT (int, optional): Count of data to use for validation. Defaults to None.
+        VALIDATION_EVALUATION_FREQUENCY (int): Frequency at which to evaluate on the validation set during training.
+        SAVE_OUTPUT (bool): Flag to decide whether to save training output or not. Defaults to False.
+        SAVE_MODEL (bool): Flag to decide whether to save the model or not. Defaults to False.
+        TRAINING_OUTPUT_PATH (str): Path to save the training output. Defaults to ''.
+        MODEL_OUTPUT_PATH (str): Path to save the trained model. Defaults to ''.
+        GRAPH_OUTPUT_PATH (str): Path to save the graph output. Defaults to ''.
         '''
         super().__init__()
         self.device = device
