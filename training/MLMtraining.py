@@ -264,6 +264,9 @@ class MLMTrainer:
         Train the model using the specified optimizer and criterion. 
         Save the model and output if specified.
         '''
+        assert self.VALIDATION_EVALUATION_FREQUENCY <= self.NUM_ITERATIONS, \
+        'The VALIDATION_EVALUATION_FREQUENCY must be less than or equal to (<=) NUM_ITERATIONS'
+
         for epoch in range(self.NUM_EPOCHS):
             for iteration in range(self.NUM_ITERATIONS):
                 sentences = self.get_training_batch()
@@ -341,8 +344,20 @@ class MLMTrainer:
         sns.lineplot(data = self.training_output, x = 'step', y = 'loss', color = 'tab:blue', label = 'Train')
         sns.lineplot(data = self.validation_output, x = 'step', y = 'loss', color = 'tab:orange', label = 'Validation')
 
-        plt.xlabel('Epoch')
+        plt.xlabel('Step')
         plt.ylabel('Loss')
+
+        min_step = min(self.training_output['step'].min(), self.validation_output['step'].min())
+        max_step = max(self.training_output['step'].max(), self.validation_output['step'].max())
+
+        xticks = np.linspace(min_step, max_step, num = 10, dtype = int)
+
+        plt.xticks(xticks)
+
+        line_steps = np.arange(self.NUM_ITERATIONS, max_step + 1, self.NUM_ITERATIONS)
+        for step in line_steps:
+            plt.axvline(x = step, color = 'r', linestyle = 'dotted')
+
         plt.legend()
 
         plt.savefig(f'{self.GRAPH_OUTPUT_PATH}/training_validation_curves_{self.timestamp}.png')
@@ -364,7 +379,7 @@ if __name__ == '__main__':
     LEARNING_RATE = 1e-2
     MODEL_VERSION = 2
     MASK_ID = 103 # NOTE: Specific to BERTTokenizerFast
-    NUM_EPOCHS = 3
+    NUM_EPOCHS = 10
     BATCH_SIZE = 256 # TODO: Increase on GPU
     VALIDATION_RATIO = 0.05 # NOTE: Used if VALIDATION_COUNT = None
     VALIDATION_COUNT = 1 # NOTE: Overrides validation ratio; represents number of files used for validation calculation
