@@ -35,7 +35,7 @@ class MLMTrainer:
         device, model, optimizer, criterion,
         tokenizer, MASK_ID, MASK_RATIO,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH,
-        directory_path, VALIDATION_RATIO, VALIDATION_COUNT = None,
+        directory_path, VALIDATION_RATIO, VALIDATION_COUNT = None, VALIDATION_EVALUATION_FREQUENCY = 50,
         SAVE_OUTPUT = False, SAVE_MODEL = False,
         TRAINING_OUTPUT_PATH = '', MODEL_OUTPUT_PATH = '', GRAPH_OUTPUT_PATH = ''):
         '''
@@ -80,6 +80,7 @@ class MLMTrainer:
         self.directory_path = directory_path
         self.VALIDATION_RATIO = VALIDATION_RATIO
         self.VALIDATION_COUNT = VALIDATION_COUNT
+        self.VALIDATION_EVALUATION_FREQUENCY = VALIDATION_EVALUATION_FREQUENCY
 
         self.SAVE_OUTPUT = SAVE_OUTPUT
         self.SAVE_MODEL = SAVE_MODEL
@@ -250,7 +251,7 @@ class MLMTrainer:
                 loss.backward()
                 self.optimizer.step()
 
-                if iteration % 7 == 0:
+                if iteration % self.VALIDATION_EVALUATION_FREQUENCY == 0:
                     print('\n' + '#' * 25)
                     print('Calculate validation loss')
                     print('#' * 25)
@@ -291,23 +292,15 @@ class MLMTrainer:
             dump(self.model, f'{MODEL_OUTPUT_PATH}/model_{self.timestamp}.joblib')
     
     def save_graphs(self):
-        fig, ax_1 = plt.subplots(figsize = (10, 6))
+        fig, ax = plt.subplots(figsize = (10, 6))
 
-        ax_1.set_xlabel('Epoch')
-        ax_1.set_ylabel('Loss')
+        ax.set_xlabel('Epoch')
+        ax.set_ylabel('Loss')
 
-        ax_1.plot(self.training_output['epoch'], self.training_output['loss'], color = 'tab:blue', label = 'Train')
-        ax_1.plot(self.validation_output['epoch'], self.validation_output['loss'], color = 'tab:orange', label = 'Validation')
+        ax.plot(self.training_output['epoch'], self.training_output['loss'], color = 'tab:blue', label = 'Train')
+        ax.plot(self.validation_output['epoch'], self.validation_output['loss'], color = 'tab:orange', label = 'Validation')
 
-        ax_2 = ax_1.twiny()
-
-        ax_2.set_xlabel('Iteration')
-        ax_2.plot(self.training_output['iteration'], self.training_output['loss'], color = 'tab:blue', alpha = 0.3)
-        ax_2.plot(self.validation_output['iteration'], self.validation_output['loss'], color = 'tab:orange', alpha = 0.3)
-
-        ax_1.legend()
-
-        fig.tight_layout()
+        ax.legend()
 
         plt.savefig(f'{self.GRAPH_OUTPUT_PATH}/training_validation_curves_{self.timestamp}.png')
 
@@ -327,12 +320,12 @@ if __name__ == '__main__':
     EXPANSION_FACTOR = 4
     LEARNING_RATE = 1e-2
     MODEL_VERSION = 2
-    MASK_ID = 103
-    # NUM_EPOCHS = 10
-    NUM_EPOCHS = 10 # TODO: Delete
+    MASK_ID = 103 # NOTE: Specific to BERTTokenizerFast
+    NUM_EPOCHS = 10
     BATCH_SIZE = 256 # TODO: Increase on GPU
-    VALIDATION_RATIO = 0.05 # Used if VALIDATION_COUNT = None
-    VALIDATION_COUNT = 1 # Overrides validation ratio; represents number of files used for validation calculation
+    VALIDATION_RATIO = 0.05 # NOTE: Used if VALIDATION_COUNT = None
+    VALIDATION_COUNT = 1 # NOTE: Overrides validation ratio; represents number of files used for validation calculation
+    VALIDATION_EVALUATION_FREQUENCY = 7 # NOTE: How often to evaluate the validation set in iterations
     NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
                     else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
     NUM_ITERATIONS = 7 # TODO: Delete
@@ -383,7 +376,7 @@ if __name__ == '__main__':
         device, model, optimizer, criterion,
         tokenizer, MASK_ID, MASK_RATIO,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH,
-        DIRECTORY_PATH, VALIDATION_RATIO, VALIDATION_COUNT,
+        DIRECTORY_PATH, VALIDATION_RATIO, VALIDATION_COUNT, VALIDATION_EVALUATION_FREQUENCY,
         SAVE_OUTPUT, SAVE_MODEL,
         TRAINING_OUTPUT_PATH, MODEL_OUTPUT_PATH, GRAPH_OUTPUT_PATH
     )
