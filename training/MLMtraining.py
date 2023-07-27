@@ -390,7 +390,6 @@ if __name__ == '__main__':
     VALIDATION_EVALUATION_FREQUENCY = 7 # NOTE: How often to evaluate the validation set in iterations
     NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
                     else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
-    NUM_ITERATIONS = 7 # TODO: Delete
 
     SAVE_OUTPUT = True
     SAVE_MODEL = True
