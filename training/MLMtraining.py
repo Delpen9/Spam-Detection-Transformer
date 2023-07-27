@@ -351,7 +351,6 @@ class MLMTrainer:
         max_step = max(self.training_output['step'].max(), self.validation_output['step'].max())
 
         xticks = np.linspace(min_step, max_step, num = 10, dtype = int)
-
         plt.xticks(xticks)
 
         line_steps = np.arange(self.NUM_ITERATIONS, max_step + 1, self.NUM_ITERATIONS)
