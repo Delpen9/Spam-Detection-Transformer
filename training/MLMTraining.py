@@ -13,7 +13,6 @@ from models.DistilledFromTinyBert import DistilledFromTinyBert
 
 # Directory Libraries
 import os
-from datetime import datetime
 
 # Standard Data Science Libraries
 import torch
@@ -23,11 +22,14 @@ import pandas as pd
 import math
 
 # Serialize and De-Serialize Model
-from joblib import dump
+from joblib import load, dump
 
 # Graphing
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+# Miscellaneous
+from datetime import datetime
 
 class MLMTrainer:
     def __init__(
@@ -387,7 +389,7 @@ if __name__ == '__main__':
     BATCH_SIZE = 256 # TODO: Increase on GPU
     VALIDATION_RATIO = 0.05 # NOTE: Used if VALIDATION_COUNT = None
     VALIDATION_COUNT = 1 # NOTE: Overrides validation ratio; represents number of files used for validation calculation
-    VALIDATION_EVALUATION_FREQUENCY = 7 # NOTE: How often to evaluate the validation set in iterations
+    VALIDATION_EVALUATION_FREQUENCY = 50 # NOTE: How often to evaluate the validation set in iterations
     NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
                     else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
 

@@ -7,16 +7,10 @@ class SpamDetectionModel(nn.Module):
     def __init__(self, model, embed_dim, n_classes = 2):
         super().__init__()
         self.model = model
-        self.linear = nn.Linear(embed_dim, n_classes)
+        self.fc = nn.Linear(embed_dim, n_classes)
 
     def forward(self, x):
-        # Feed into transformer encoder
-        out = self.model(x)  # shape of out (N, T, D)
-
-        # Gather the last relevant hidden state
-        out = out[:, -1, :]  # (N, D)
-
-        # FC layer
-        y_prob = self.linear(out)
-        y_prob = F.softmax(y_prob, dim = 1)
-        return y_prob
+        x = self.model(x)
+        x = x[:, -1, :]
+        outputs = self.fc(x)
+        return outputs
