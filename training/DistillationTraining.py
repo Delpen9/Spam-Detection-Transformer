@@ -68,7 +68,7 @@ if __name__ == '__main__':
     results = classifier(sentences)
     
     tiny_BERT_probabilities = []
-    tiny_BERT_labels = []
+    true_labels = []
     for result in results:
         if result['label'] == 'LABEL_0':
             prob = [result['score'], 1 - result['score']]
@@ -78,10 +78,10 @@ if __name__ == '__main__':
         true_label = 1 # TODO: Get this true label from the dataset
 
         tiny_BERT_probabilities.append(prob)
-        tiny_BERT_labels.append(label)
+        true_labels.append(true_label)
 
     tiny_BERT_probabilities = torch.tensor(tiny_BERT_probabilities)
-    tiny_BERT_labels = torch.tensor(tiny_BERT_labels)
+    true_labels = torch.tensor(true_labels)
 
     sentences = [sentence.split() for sentence in sentences]
 
@@ -100,6 +100,6 @@ if __name__ == '__main__':
 
     inputs = torch.stack(input_list).to(device)
 
-    loss = distillationModel.loss(inputs, tiny_BERT_probabilities, tiny_BERT_labels)
+    loss = distillationModel.loss(inputs, tiny_BERT_probabilities, true_labels)
     print(loss.item())
 
