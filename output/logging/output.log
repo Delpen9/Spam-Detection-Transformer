@@ -45,3 +45,149 @@ Batch file index: 1; Row index start: 1280; Row index end: 1536.
 Epoch: 1 of 3, Iteration: 6 of 30, Loss: 8.523316383361816
 Batch file index: 1; Row index start: 1536; Row index end: 1792.
 
+Epoch: 1 of 3, Iteration: 7 of 30, Loss: 8.474997520446777
+Batch file index: 1; Row index start: 1792; Row index end: 2048.
+
+Epoch: 1 of 3, Iteration: 8 of 30, Loss: 7.322526454925537
+Batch file index: 1; Row index start: 2048; Row index end: 2304.
+
+Epoch: 1 of 3, Iteration: 9 of 30, Loss: 8.137532234191895
+Batch file index: 1; Row index start: 2304; Row index end: 2560.
+
+Epoch: 1 of 3, Iteration: 10 of 30, Loss: 7.055168628692627
+Batch file index: 1; Row index start: 2560; Row index end: 2816.
+
+Epoch: 1 of 3, Iteration: 11 of 30, Loss: 6.480682373046875
+Batch file index: 1; Row index start: 2816; Row index end: 3072.
+
+Epoch: 1 of 3, Iteration: 12 of 30, Loss: 5.658820629119873
+Batch file index: 1; Row index start: 3072; Row index end: 3328.
+
+Epoch: 1 of 3, Iteration: 13 of 30, Loss: 5.412797927856445
+Batch file index: 1; Row index start: 3328; Row index end: 3584.
+
+Epoch: 1 of 3, Iteration: 14 of 30, Loss: 5.41827392578125
+Batch file index: 1; Row index start: 3584; Row index end: 3840.
+
+Epoch: 1 of 3, Iteration: 15 of 30, Loss: 5.013632297515869
+Batch file index: 1; Row index start: 3840; Row index end: 4096.
+
+Epoch: 1 of 3, Iteration: 16 of 30, Loss: 4.199975967407227
+Batch file index: 1; Row index start: 4096; Row index end: 4160.
+Batch file index: 2; Row index start: 0; Row index end: 192.
+
+Epoch: 1 of 3, Iteration: 17 of 30, Loss: 4.505640983581543
+Batch file index: 2; Row index start: 192; Row index end: 448.
+
+Epoch: 1 of 3, Iteration: 18 of 30, Loss: 4.170696258544922
+Batch file index: 2; Row index start: 448; Row index end: 704.
+
+Epoch: 1 of 3, Iteration: 19 of 30, Loss: 3.980942487716675
+Batch file index: 2; Row index start: 704; Row index end: 960.
+
+Epoch: 1 of 3, Iteration: 20 of 30, Loss: 3.7912228107452393
+Batch file index: 2; Row index start: 960; Row index end: 1216.
+
+Epoch: 1 of 3, Iteration: 21 of 30, Loss: 3.4284472465515137
+Batch file index: 2; Row index start: 1216; Row index end: 1472.
+
+Epoch: 1 of 3, Iteration: 22 of 30, Loss: 3.584690570831299
+Batch file index: 2; Row index start: 1472; Row index end: 1728.
+
+Epoch: 1 of 3, Iteration: 23 of 30, Loss: 3.2126011848449707
+Batch file index: 2; Row index start: 1728; Row index end: 1984.
+
+Epoch: 1 of 3, Iteration: 24 of 30, Loss: 3.1044602394104004
+Batch file index: 2; Row index start: 1984; Row index end: 2240.
+
+Epoch: 1 of 3, Iteration: 25 of 30, Loss: 3.1570935249328613
+Batch file index: 2; Row index start: 2240; Row index end: 2496.
+
+Epoch: 1 of 3, Iteration: 26 of 30, Loss: 3.4733314514160156
+Batch file index: 2; Row index start: 2496; Row index end: 2752.
+
+Epoch: 1 of 3, Iteration: 27 of 30, Loss: 2.8835697174072266
+Batch file index: 2; Row index start: 2752; Row index end: 3008.
+
+Epoch: 1 of 3, Iteration: 28 of 30, Loss: 2.9987926483154297
+Batch file index: 2; Row index start: 3008; Row index end: 3264.
+
+Epoch: 1 of 3, Iteration: 29 of 30, Loss: 2.439986228942871
+Batch file index: 2; Row index start: 3264; Row index end: 3520.
+
+Epoch: 1 of 3, Iteration: 30 of 30, Loss: 2.3595283031463623
+Batch file index: 2; Row index start: 3520; Row index end: 3776.
+
+
+#########################
+Calculate validation loss
+#########################
+Validation loss for batch: 2.2797505855560303
+Validation loss for batch: 2.1838834285736084
+Validation loss for batch: 2.2398102283477783
+Validation loss for batch: 2.3629252910614014
+Validation loss for batch: 2.3652446269989014
+Validation loss for batch: 2.12015962600708
+Validation loss for batch: 2.359276533126831
+Validation loss for batch: 2.4664621353149414
+Validation loss for batch: 2.766582489013672
+Validation loss for batch: 2.469334602355957
+Validation loss for batch: 2.382847547531128
+Validation loss for batch: 2.4242894649505615
+Validation loss for batch: 2.406407594680786
+Validation loss for batch: 2.2105515003204346
+Validation loss for batch: 2.353776216506958
+Validation loss for batch: 2.2957816123962402
+#########################
+Average validation loss for all batches: 2.3554427176713943
+#########################
+
+#########################
+Training loss
+#########################
+Epoch: 2 of 3, Iteration: 1 of 30, Loss: 2.3581793308258057
+Batch file index: 2; Row index start: 3776; Row index end: 4032.
+
+Epoch: 2 of 3, Iteration: 2 of 30, Loss: 2.2471530437469482
+Batch file index: 2; Row index start: 4032; Row index end: 4160.
+Batch file index: 3; Row index start: 0; Row index end: 128.
+
+Epoch: 2 of 3, Iteration: 3 of 30, Loss: 2.193892240524292
+Batch file index: 3; Row index start: 128; Row index end: 384.
+
+Epoch: 2 of 3, Iteration: 4 of 30, Loss: 2.093691110610962
+Batch file index: 3; Row index start: 384; Row index end: 640.
+
+Epoch: 2 of 3, Iteration: 5 of 30, Loss: 2.1834073066711426
+Batch file index: 3; Row index start: 640; Row index end: 896.
+
+Epoch: 2 of 3, Iteration: 6 of 30, Loss: 2.13456654548645
+Batch file index: 3; Row index start: 896; Row index end: 1152.
+
+Epoch: 2 of 3, Iteration: 7 of 30, Loss: 1.8418152332305908
+Batch file index: 3; Row index start: 1152; Row index end: 1408.
+
+Epoch: 2 of 3, Iteration: 8 of 30, Loss: 2.020761728286743
+Batch file index: 3; Row index start: 1408; Row index end: 1664.
+
+Epoch: 2 of 3, Iteration: 9 of 30, Loss: 2.0399646759033203
+Batch file index: 3; Row index start: 1664; Row index end: 1920.
+
+Epoch: 2 of 3, Iteration: 10 of 30, Loss: 1.9702361822128296
+Batch file index: 3; Row index start: 1920; Row index end: 2176.
+
+Epoch: 2 of 3, Iteration: 11 of 30, Loss: 1.9480745792388916
+Batch file index: 3; Row index start: 2176; Row index end: 2432.
+
+Epoch: 2 of 3, Iteration: 12 of 30, Loss: 1.8219547271728516
+Batch file index: 3; Row index start: 2432; Row index end: 2688.
+
+Epoch: 2 of 3, Iteration: 13 of 30, Loss: 1.7357040643692017
+Batch file index: 3; Row index start: 2688; Row index end: 2944.
+
+Epoch: 2 of 3, Iteration: 14 of 30, Loss: 2.100128173828125
+Batch file index: 3; Row index start: 2944; Row index end: 3200.
+
+Epoch: 2 of 3, Iteration: 15 of 30, Loss: 1.7185471057891846
+Batch file index: 3; Row index start: 3200; Row index end: 3456.
+

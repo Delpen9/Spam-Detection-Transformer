@@ -110,60 +110,64 @@ class MLMTrainer:
         Returns:
         List of sentences for training.
         '''
-        file_row_count = 4160
+        try:
+            file_row_count = 4160
 
-        assert self.BATCH_SIZE < file_row_count, \
-        'The batch size should not be greater than the file row count (4160)'
+            assert self.BATCH_SIZE < file_row_count, \
+            'The batch size should not be greater than the file row count (4160)'
 
-        sentences = []
-        directory_list = os.listdir(self.directory_path)
+            sentences = []
+            directory_list = os.listdir(self.directory_path)
 
-        num_files = len(directory_list)
-        validation_count = int(num_files * self.VALIDATION_RATIO) if self.VALIDATION_COUNT == None else self.VALIDATION_COUNT
-        
-        training_file_start_index = validation_count + math.floor((self.BATCH_SIZE * self.step) / file_row_count)
-
-        batch_index_start = self.BATCH_SIZE * self.step - math.floor((self.BATCH_SIZE * self.step) / file_row_count) * file_row_count
-        batch_index_end = batch_index_start + self.BATCH_SIZE
-
-        # Handle file overflow
-        if batch_index_end >= file_row_count:
-            filenames = directory_list[training_file_start_index : training_file_start_index + 2]
-
-            with open(os.path.join(self.directory_path, filenames[0]), 'r') as f:
-                file_sentences = f.read().lower().strip().split('\n')
-                batch_indices = np.arange(batch_index_start, file_row_count, 1)
-                batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
-                sentences.extend([sentence.split() for sentence in batch_sentences])
+            num_files = len(directory_list)
+            validation_count = int(num_files * self.VALIDATION_RATIO) if self.VALIDATION_COUNT == None else self.VALIDATION_COUNT
             
-            message = f'Batch file index: {training_file_start_index}; Row index start: {batch_index_start}; Row index end: {file_row_count}.'
-            print(message)
-            logging.info(message)
+            training_file_start_index = validation_count + math.floor((self.BATCH_SIZE * self.step) / file_row_count)
 
-            batch_index_end %= file_row_count
-            with open(os.path.join(self.directory_path, filenames[1]), 'r') as f:
-                file_sentences = f.read().lower().strip().split('\n')
-                batch_indices = np.arange(0, batch_index_end, 1)
-                batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
-                sentences.extend([sentence.split() for sentence in batch_sentences])
+            batch_index_start = self.BATCH_SIZE * self.step - math.floor((self.BATCH_SIZE * self.step) / file_row_count) * file_row_count
+            batch_index_end = batch_index_start + self.BATCH_SIZE
+
+            # Handle file overflow
+            if batch_index_end >= file_row_count:
+                filenames = directory_list[training_file_start_index : training_file_start_index + 2]
+
+                with open(os.path.join(self.directory_path, filenames[0]), 'r') as f:
+                    file_sentences = f.read().lower().strip().split('\n')
+                    batch_indices = np.arange(batch_index_start, file_row_count, 1)
+                    batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
+                    sentences.extend([sentence.split() for sentence in batch_sentences])
+                
+                message = f'Batch file index: {training_file_start_index}; Row index start: {batch_index_start}; Row index end: {file_row_count}.'
+                print(message)
+                logging.info(message)
+
+                batch_index_end %= file_row_count
+                with open(os.path.join(self.directory_path, filenames[1]), 'r') as f:
+                    file_sentences = f.read().lower().strip().split('\n')
+                    batch_indices = np.arange(0, batch_index_end, 1)
+                    batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
+                    sentences.extend([sentence.split() for sentence in batch_sentences])
+                
+                message = f'Batch file index: {training_file_start_index + 1}; Row index start: 0; Row index end: {batch_index_end}.\n'
+                print(message)
+                logging.info(message)
+
+            # Base-case: No file overflow
+            else:
+                filenames = directory_list[training_file_start_index]
+
+                with open(os.path.join(self.directory_path, filenames), 'r') as f:
+                    file_sentences = f.read().lower().strip().split('\n')
+                    batch_indices = np.arange(batch_index_start, batch_index_start + self.BATCH_SIZE, 1)
+                    batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
+                    sentences.extend([sentence.split() for sentence in batch_sentences])
+
+                message = f'Batch file index: {training_file_start_index}; Row index start: {batch_index_start}; Row index end: {batch_index_start + self.BATCH_SIZE}.\n'
+                print(message)
+                logging.info(message)
             
-            message = f'Batch file index: {training_file_start_index + 1}; Row index start: 0; Row index end: {batch_index_end}.\n'
-            print(message)
-            logging.info(message)
-
-        # Base-case: No file overflow
-        else:
-            filenames = directory_list[training_file_start_index]
-
-            with open(os.path.join(self.directory_path, filenames), 'r') as f:
-                file_sentences = f.read().lower().strip().split('\n')
-                batch_indices = np.arange(batch_index_start, batch_index_start + self.BATCH_SIZE, 1)
-                batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
-                sentences.extend([sentence.split() for sentence in batch_sentences])
-
-            message = f'Batch file index: {training_file_start_index}; Row index start: {batch_index_start}; Row index end: {batch_index_start + self.BATCH_SIZE}.\n'
-            print(message)
-            logging.info(message)
+            except AssertionError as e:
+                logging.info(e)
 
         return sentences
 
@@ -309,98 +313,102 @@ class MLMTrainer:
         Train the model using the specified optimizer and criterion. 
         Save the model and output if specified.
         '''
-        assert self.VALIDATION_EVALUATION_FREQUENCY <= self.NUM_ITERATIONS, \
-        'The VALIDATION_EVALUATION_FREQUENCY must be less than or equal to (<=) NUM_ITERATIONS'
+        try:
+            assert self.VALIDATION_EVALUATION_FREQUENCY <= self.NUM_ITERATIONS, \
+            'The VALIDATION_EVALUATION_FREQUENCY must be less than or equal to (<=) NUM_ITERATIONS'
 
-        for epoch in range(self.NUM_EPOCHS):
-            for iteration in range(self.NUM_ITERATIONS):
-                sentences = self.get_training_batch()
+            for epoch in range(self.NUM_EPOCHS):
+                for iteration in range(self.NUM_ITERATIONS):
+                    sentences = self.get_training_batch()
 
-                self.step += 1
+                    self.step += 1
 
-                inputs, targets = self.encode_sentences(sentences)
-                self.mask_inputs(inputs, sentences)
+                    inputs, targets = self.encode_sentences(sentences)
+                    self.mask_inputs(inputs, sentences)
 
-                outputs = self.model(inputs)
-                reshaped_outputs = outputs.view(-1, outputs.size(-1)).clone()
-                desired_target = targets.view(-1).clone()
+                    outputs = self.model(inputs)
+                    reshaped_outputs = outputs.view(-1, outputs.size(-1)).clone()
+                    desired_target = targets.view(-1).clone()
 
-                loss = self.criterion(reshaped_outputs, desired_target)
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
+                    loss = self.criterion(reshaped_outputs, desired_target)
+                    self.optimizer.zero_grad()
+                    loss.backward()
+                    self.optimizer.step()
 
-                if iteration % self.VALIDATION_EVALUATION_FREQUENCY == 0:
-                    message = '\n' + '#' * 25
-                    print(message)
-                    logging.info(message)
+                    if iteration % self.VALIDATION_EVALUATION_FREQUENCY == 0:
+                        message = '\n' + '#' * 25
+                        print(message)
+                        logging.info(message)
 
-                    message = 'Calculate validation loss'
+                        message = 'Calculate validation loss'
+                        print(message)
+                        logging.info(message)
+                        
+                        message = '#' * 25
+                        print(message)
+                        logging.info(message)
+
+                        validation_loss = self.calculate_validation_loss()
+                        
+                        message = '#' * 25
+                        print(message)
+                        logging.info(message)
+
+                        message = f'Average validation loss for all batches: {validation_loss}'
+                        print(message)
+                        logging.info(message)
+
+                        message = '#' * 25
+                        print(message)
+                        logging.info(message)
+
+                        message = '\n' + '#' * 25
+                        print(message)
+                        logging.info(message)
+
+                        message = 'Training loss'
+                        print(message)
+                        logging.info(message)
+
+                        message = '#' * 25
+                        print(message)
+                        logging.info(message)
+
+                        self.validation_output = pd.concat([
+                            self.validation_output,
+                            pd.DataFrame({
+                                'epoch': [epoch + 1],
+                                'iteration': [iteration + 1],
+                                'loss': [validation_loss]
+                            })], ignore_index = True
+                        )
+
+                    message = f'Epoch: {epoch + 1} of {self.NUM_EPOCHS}, Iteration: {iteration + 1} of {self.NUM_ITERATIONS}, Loss: {loss.item()}'
                     print(message)
                     logging.info(message)
                     
-                    message = '#' * 25
-                    print(message)
-                    logging.info(message)
-
-                    validation_loss = self.calculate_validation_loss()
-                    
-                    message = '#' * 25
-                    print(message)
-                    logging.info(message)
-
-                    message = f'Average validation loss for all batches: {validation_loss}'
-                    print(message)
-                    logging.info(message)
-
-                    message = '#' * 25
-                    print(message)
-                    logging.info(message)
-
-                    message = '\n' + '#' * 25
-                    print(message)
-                    logging.info(message)
-
-                    message = 'Training loss'
-                    print(message)
-                    logging.info(message)
-
-                    message = '#' * 25
-                    print(message)
-                    logging.info(message)
-
-                    self.validation_output = pd.concat([
-                        self.validation_output,
+                    self.training_output = pd.concat([
+                        self.training_output,
                         pd.DataFrame({
                             'epoch': [epoch + 1],
                             'iteration': [iteration + 1],
-                            'loss': [validation_loss]
+                            'loss': [loss.item()]
                         })], ignore_index = True
                     )
 
-                message = f'Epoch: {epoch + 1} of {self.NUM_EPOCHS}, Iteration: {iteration + 1} of {self.NUM_ITERATIONS}, Loss: {loss.item()}'
-                print(message)
-                logging.info(message)
-                
-                self.training_output = pd.concat([
-                    self.training_output,
-                    pd.DataFrame({
-                        'epoch': [epoch + 1],
-                        'iteration': [iteration + 1],
-                        'loss': [loss.item()]
-                    })], ignore_index = True
-                )
+            self.timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
-        self.timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            self.process_outputs()
 
-        self.process_outputs()
+            if self.SAVE_OUTPUT == True:
+                self.training_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/training_output_{self.timestamp}.csv', index = False)
+                self.validation_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/validation_output_{self.timestamp}.csv', index = False)
 
-        if self.SAVE_OUTPUT == True:
-            self.training_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/training_output_{self.timestamp}.csv', index = False)
-            self.validation_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/validation_output_{self.timestamp}.csv', index = False)
+            if self.SAVE_MODEL == True:
+                dump(self.model, f'{MODEL_OUTPUT_PATH}/model_{self.timestamp}.joblib')
 
-        if self.SAVE_MODEL == True:
-            dump(self.model, f'{MODEL_OUTPUT_PATH}/model_{self.timestamp}.joblib')
+        except AssertionError as e:
+            logging.info(e)
     
     def save_graphs(self, title = ''):
         '''
