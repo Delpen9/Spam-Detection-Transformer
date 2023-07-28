@@ -4,17 +4,7 @@ Batch file index: 1; Row index start: 0; Row index end: 256.
 #########################
 Calculate validation loss
 #########################
-Validation loss for batch: 7.696757793426514
-Validation loss for batch: 7.641380310058594
-Validation loss for batch: 7.639952659606934
-Validation loss for batch: 7.739898204803467
-Validation loss for batch: 7.639708042144775
-Validation loss for batch: 7.624069690704346
-Validation loss for batch: 7.838760852813721
-Validation loss for batch: 7.750117301940918
-Validation loss for batch: 7.640069484710693
-Validation loss for batch: 7.669780731201172
-Validation loss for batch: 7.603227138519287
-Validation loss for batch: 7.6593732833862305
-Validation loss for batch: 7.737414360046387
-Validation loss for batch: 7.650897979736328
+Validation loss for batch: 7.467663288116455
+Validation loss for batch: 7.448129653930664
+Validation loss for batch: 7.430178165435791
+Validation loss for batch: 7.5406365394592285

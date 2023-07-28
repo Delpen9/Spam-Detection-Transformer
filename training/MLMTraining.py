@@ -101,7 +101,7 @@ class MLMTrainer:
         self.timestamp = None
         self.step = 0
 
-        logging.basicConfig(filename = f'{LOGGING_OUTPUT_PATH}', filemode = 'a', level = logging.INFO, format = '%(message)s')
+        logging.basicConfig(filename = f'{LOGGING_OUTPUT_PATH}', filemode = 'w', level = logging.INFO, format = '%(message)s')
 
     def get_training_batch(self):
         '''
@@ -353,11 +353,11 @@ class MLMTrainer:
                     print(message)
                     logging.info(message)
 
-                    message = '\n' + '#' * 25
+                    message = '#' * 25
                     print(message)
                     logging.info(message)
 
-                    message = '#' * 25
+                    message = '\n' + '#' * 25
                     print(message)
                     logging.info(message)
 
