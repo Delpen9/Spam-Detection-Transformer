@@ -183,11 +183,11 @@ if __name__ == '__main__':
     MODEL_PATH = '../artifacts/MLM/model_2023-07-28_17-59-18.joblib'
     model = load(MODEL_PATH)
     
+    BATCH_SIZE = 256
     NUM_EPOCHS = 10
-    NUM_ITERATIONS = 10
+    NUM_ITERATIONS = math.floor(33716 / BATCH_SIZE)
     LEARNING_RATE = 1e-2
     EMBED_DIM = 768
-    BATCH_SIZE = 256
     SEQ_LENGTH = 16
 
     FREEZE_EARLY_LAYERS = True
