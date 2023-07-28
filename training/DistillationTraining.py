@@ -72,10 +72,10 @@ if __name__ == '__main__':
     for result in results:
         if result['label'] == 'LABEL_0':
             prob = [result['score'], 1 - result['score']]
-            label = 0
         elif result['label'] == 'LABEL_1':
             prob = [1 - result['score'], result['score']]
-            label = 1
+
+        true_label = 1 # TODO: Get this true label from the dataset
 
         tiny_BERT_probabilities.append(prob)
         tiny_BERT_labels.append(label)
