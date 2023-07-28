@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings('ignore', category = UserWarning)
+
 # Tokenization
 from transformers import BertTokenizerFast, AutoModelForSequenceClassification, pipeline
 
@@ -127,7 +130,13 @@ class DistillationTrainer:
         '''
         '''
         teacher_classifier = AutoModelForSequenceClassification.from_pretrained(self.teacher_model)
-        # teacher_classifier = pipeline('text-classification', model = teacher, tokenizer = self.tokenizer)
+
+        # Freeze all the parameters
+        for param in self.model.model.model.parameters():
+            param.requires_grad = False
+
+        # Unfreeze the final layer
+        self.model.model.fc.requires_grad = True
 
         for epoch in range(self.NUM_EPOCHS):
             for iteration in range(self.NUM_ITERATIONS):
@@ -180,6 +189,8 @@ if __name__ == '__main__':
     EMBED_DIM = 768
     BATCH_SIZE = 256
     SEQ_LENGTH = 16
+
+    FREEZE_EARLY_LAYERS = True
 
     MODEL_VERSION = 2
 
