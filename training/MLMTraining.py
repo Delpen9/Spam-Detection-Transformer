@@ -166,8 +166,8 @@ class MLMTrainer:
                 print(message)
                 logging.info(message)
             
-            except AssertionError as e:
-                logging.info(e)
+        except AssertionError as e:
+            logging.info(e)
 
         return sentences
 
@@ -472,10 +472,10 @@ if __name__ == '__main__':
     BATCH_SIZE = 256 # TODO: Increase on GPU
     VALIDATION_RATIO = 0.05 # NOTE: Used if VALIDATION_COUNT = None
     VALIDATION_COUNT = 1 # NOTE: Overrides validation ratio; represents number of files used for validation calculation
-    VALIDATION_EVALUATION_FREQUENCY = 30 # NOTE: How often to evaluate the validation set in iterations
+    VALIDATION_EVALUATION_FREQUENCY = 7 # NOTE: How often to evaluate the validation set in iterations
     # NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
     #                 else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
-    NUM_ITERATIONS = 30
+    NUM_ITERATIONS = 7
 
     SAVE_OUTPUT = True
     SAVE_MODEL = True
