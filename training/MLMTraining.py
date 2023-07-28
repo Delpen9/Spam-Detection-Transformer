@@ -468,14 +468,13 @@ if __name__ == '__main__':
     LEARNING_RATE = 1e-2
     MODEL_VERSION = 2
     MASK_ID = 103 # NOTE: Specific to BERTTokenizerFast
-    NUM_EPOCHS = 3
+    NUM_EPOCHS = 10
     BATCH_SIZE = 256 # TODO: Increase on GPU
     VALIDATION_RATIO = 0.05 # NOTE: Used if VALIDATION_COUNT = None
     VALIDATION_COUNT = 1 # NOTE: Overrides validation ratio; represents number of files used for validation calculation
     VALIDATION_EVALUATION_FREQUENCY = 7 # NOTE: How often to evaluate the validation set in iterations
-    # NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
-    #                 else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
-    NUM_ITERATIONS = 7
+    NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
+                    else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
 
     SAVE_OUTPUT = True
     SAVE_MODEL = True
