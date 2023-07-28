@@ -96,7 +96,7 @@ class MLMTrainer:
         self.validation_output = pd.DataFrame([], columns = ['epoch', 'iteration', 'loss'])
 
         self.timestamp = None
-        self.iteration = 0
+        self.step = 0
 
     def get_training_batch(self):
         '''
@@ -105,10 +105,10 @@ class MLMTrainer:
         Returns:
         List of sentences for training.
         '''
-        assert self.BATCH_SIZE < 4160, \
-        'The batch size should not be greater than the file row count (4160)'
+        file_row_count = 4160
 
-        # TODO: Get this code to handle when batch size goes over the file row count
+        assert self.BATCH_SIZE < file_row_count, \
+        'The batch size should not be greater than the file row count (4160)'
 
         sentences = []
         directory_list = os.listdir(self.directory_path)
@@ -116,11 +116,9 @@ class MLMTrainer:
         num_files = len(directory_list)
         validation_count = int(num_files * self.VALIDATION_RATIO) if self.VALIDATION_COUNT == None else self.VALIDATION_COUNT
         
-        # 4160 is the row count of each .txt file
-        file_row_count = 4160
-        training_file_start_index = validation_count + math.floor(file_row_count / (self.BATCH_SIZE * self.iteration))
+        training_file_start_index = validation_count + math.floor((self.BATCH_SIZE * self.step) / file_row_count)
 
-        batch_index_start = file_row_count % (self.BATCH_SIZE * self.iteration)
+        batch_index_start = self.BATCH_SIZE * self.step - math.floor((self.BATCH_SIZE * self.step) / file_row_count) * file_row_count
         batch_index_end = batch_index_start + self.BATCH_SIZE
 
         # Handle file overflow
@@ -132,6 +130,8 @@ class MLMTrainer:
                 batch_indices = np.arange(batch_index_start, file_row_count, 1)
                 batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
                 sentences.extend([sentence.split() for sentence in batch_sentences])
+            
+            print(f'Batch file index: {training_file_start_index}; Row index start: {batch_index_start}; Row index end: {file_row_count}.')
 
             batch_index_end %= file_row_count
             with open(os.path.join(self.directory_path, filenames[1]), 'r') as f:
@@ -139,6 +139,8 @@ class MLMTrainer:
                 batch_indices = np.arange(0, batch_index_end, 1)
                 batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
                 sentences.extend([sentence.split() for sentence in batch_sentences])
+            
+            print(f'Batch file index: {training_file_start_index + 1}; Row index start: 0; Row index end: {batch_index_end}.\n')
 
         # Base-case: No file overflow
         else:
@@ -149,6 +151,8 @@ class MLMTrainer:
                 batch_indices = np.arange(batch_index_start, batch_index_start + self.BATCH_SIZE, 1)
                 batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
                 sentences.extend([sentence.split() for sentence in batch_sentences])
+
+            print(f'Batch file index: {training_file_start_index}; Row index start: {batch_index_start}; Row index end: {batch_index_start + self.BATCH_SIZE}.\n')
 
         return sentences
 
@@ -297,9 +301,9 @@ class MLMTrainer:
 
         for epoch in range(self.NUM_EPOCHS):
             for iteration in range(self.NUM_ITERATIONS):
-                self.iteration += 1
-
                 sentences = self.get_training_batch()
+
+                self.step += 1
 
                 inputs, targets = self.encode_sentences(sentences)
                 self.mask_inputs(inputs, sentences)
@@ -328,18 +332,18 @@ class MLMTrainer:
                         self.validation_output,
                         pd.DataFrame({
                             'epoch': [epoch + 1],
-                            'iteration': [self.iteration],
+                            'iteration': [iteration + 1],
                             'loss': [validation_loss]
                         })], ignore_index = True
                     )
 
-                print(f'Epoch: {epoch + 1} of {self.NUM_EPOCHS}, Iteration: {self.iteration} of {self.NUM_ITERATIONS}, Loss: {loss.item()}')
+                print(f'Epoch: {epoch + 1} of {self.NUM_EPOCHS}, Iteration: {iteration + 1} of {self.NUM_ITERATIONS}, Loss: {loss.item()}')
                 
                 self.training_output = pd.concat([
                     self.training_output,
                     pd.DataFrame({
                         'epoch': [epoch + 1],
-                        'iteration': [self.iteration],
+                        'iteration': [iteration + 1],
                         'loss': [loss.item()]
                     })], ignore_index = True
                 )
@@ -413,13 +417,14 @@ if __name__ == '__main__':
     LEARNING_RATE = 1e-2
     MODEL_VERSION = 2
     MASK_ID = 103 # NOTE: Specific to BERTTokenizerFast
-    NUM_EPOCHS = 10
+    NUM_EPOCHS = 3
     BATCH_SIZE = 256 # TODO: Increase on GPU
     VALIDATION_RATIO = 0.05 # NOTE: Used if VALIDATION_COUNT = None
     VALIDATION_COUNT = 1 # NOTE: Overrides validation ratio; represents number of files used for validation calculation
-    VALIDATION_EVALUATION_FREQUENCY = 50 # NOTE: How often to evaluate the validation set in iterations
-    NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
-                    else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
+    VALIDATION_EVALUATION_FREQUENCY = 30 # NOTE: How often to evaluate the validation set in iterations
+    # NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
+    #                 else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
+    NUM_ITERATIONS = 30
 
     SAVE_OUTPUT = True
     SAVE_MODEL = True
