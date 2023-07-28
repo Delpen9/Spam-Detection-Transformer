@@ -129,7 +129,7 @@ class MLMTrainer:
 
             with open(os.path.join(self.directory_path, filenames[0]), 'r') as f:
                 file_sentences = f.read().lower().strip().split('\n')
-                batch_indices = np.arange(batch_index_start, 4160, 1)
+                batch_indices = np.arange(batch_index_start, file_row_count, 1)
                 batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
                 sentences.extend([sentence.split() for sentence in batch_sentences])
 
