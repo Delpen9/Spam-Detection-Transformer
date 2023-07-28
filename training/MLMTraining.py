@@ -28,6 +28,9 @@ from joblib import load, dump
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# Logging
+import logging
+
 # Miscellaneous
 from datetime import datetime
 
@@ -39,7 +42,7 @@ class MLMTrainer:
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH,
         directory_path, VALIDATION_RATIO, VALIDATION_COUNT = None, VALIDATION_EVALUATION_FREQUENCY = 50,
         SAVE_OUTPUT = False, SAVE_MODEL = False,
-        TRAINING_OUTPUT_PATH = '', MODEL_OUTPUT_PATH = '', GRAPH_OUTPUT_PATH = ''):
+        TRAINING_OUTPUT_PATH = '', MODEL_OUTPUT_PATH = '', GRAPH_OUTPUT_PATH = '', LOGGING_OUTPUT_PATH = '../output/logging/output.log'):
         '''
         Initialize the MLMTrainer instance with specified parameters.
 
@@ -98,6 +101,8 @@ class MLMTrainer:
         self.timestamp = None
         self.step = 0
 
+        logging.basicConfig(filename = f'{LOGGING_OUTPUT_PATH}', filemode = 'a', level = logging.INFO, format = '%(message)s')
+
     def get_training_batch(self):
         '''
         Generate a batch of sentences for training from the directory specified in directory_path.
@@ -131,7 +136,9 @@ class MLMTrainer:
                 batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
                 sentences.extend([sentence.split() for sentence in batch_sentences])
             
-            print(f'Batch file index: {training_file_start_index}; Row index start: {batch_index_start}; Row index end: {file_row_count}.')
+            message = f'Batch file index: {training_file_start_index}; Row index start: {batch_index_start}; Row index end: {file_row_count}.'
+            print(message)
+            logging.info(message)
 
             batch_index_end %= file_row_count
             with open(os.path.join(self.directory_path, filenames[1]), 'r') as f:
@@ -140,7 +147,9 @@ class MLMTrainer:
                 batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
                 sentences.extend([sentence.split() for sentence in batch_sentences])
             
-            print(f'Batch file index: {training_file_start_index + 1}; Row index start: 0; Row index end: {batch_index_end}.\n')
+            message = f'Batch file index: {training_file_start_index + 1}; Row index start: 0; Row index end: {batch_index_end}.\n'
+            print(message)
+            logging.info(message)
 
         # Base-case: No file overflow
         else:
@@ -152,7 +161,9 @@ class MLMTrainer:
                 batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
                 sentences.extend([sentence.split() for sentence in batch_sentences])
 
-            print(f'Batch file index: {training_file_start_index}; Row index start: {batch_index_start}; Row index end: {batch_index_start + self.BATCH_SIZE}.\n')
+            message = f'Batch file index: {training_file_start_index}; Row index start: {batch_index_start}; Row index end: {batch_index_start + self.BATCH_SIZE}.\n'
+            print(message)
+            logging.info(message)
 
         return sentences
 
@@ -214,7 +225,9 @@ class MLMTrainer:
                 desired_target = targets.view(-1).clone()
                 loss = self.criterion(reshaped_outputs, desired_target)
 
-                print(f'Validation loss for batch: {loss.item()}')
+                message = f'Validation loss for batch: {loss.item()}'
+                print(message)
+                logging.info(message)
 
                 validation_loss += loss.item()
 
@@ -318,16 +331,44 @@ class MLMTrainer:
                 self.optimizer.step()
 
                 if iteration % self.VALIDATION_EVALUATION_FREQUENCY == 0:
-                    print('\n' + '#' * 25)
-                    print('Calculate validation loss')
-                    print('#' * 25)
+                    message = '\n' + '#' * 25
+                    print(message)
+                    logging.info(message)
+
+                    message = 'Calculate validation loss'
+                    print(message)
+                    logging.info(message)
+                    
+                    message = '#' * 25
+                    print(message)
+                    logging.info(message)
+
                     validation_loss = self.calculate_validation_loss()
-                    print('#' * 25)
-                    print(f'Average validation loss for all batches: {validation_loss}')
-                    print('#' * 25 + '\n')
-                    print('#' * 25)
-                    print('Training loss')
-                    print('#' * 25)
+                    
+                    message = '#' * 25
+                    print(message)
+                    logging.info(message)
+
+                    message = f'Average validation loss for all batches: {validation_loss}'
+                    print(message)
+                    logging.info(message)
+
+                    message = '\n' + '#' * 25
+                    print(message)
+                    logging.info(message)
+
+                    message = '#' * 25
+                    print(message)
+                    logging.info(message)
+
+                    message = 'Training loss'
+                    print(message)
+                    logging.info(message)
+
+                    message = '#' * 25
+                    print(message)
+                    logging.info(message)
+
                     self.validation_output = pd.concat([
                         self.validation_output,
                         pd.DataFrame({
@@ -337,7 +378,9 @@ class MLMTrainer:
                         })], ignore_index = True
                     )
 
-                print(f'Epoch: {epoch + 1} of {self.NUM_EPOCHS}, Iteration: {iteration + 1} of {self.NUM_ITERATIONS}, Loss: {loss.item()}')
+                message = f'Epoch: {epoch + 1} of {self.NUM_EPOCHS}, Iteration: {iteration + 1} of {self.NUM_ITERATIONS}, Loss: {loss.item()}'
+                print(message)
+                logging.info(message)
                 
                 self.training_output = pd.concat([
                     self.training_output,
