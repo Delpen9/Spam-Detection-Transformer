@@ -32,19 +32,103 @@ import seaborn as sns
 from datetime import datetime
 import copy
 
-def get_enron_data():
-    return None
+class DistillationTrainer:
+    def __init__(
+        self,
+        device, model, optimizer,
+        tokenizer,
+        NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH,
+        teacher_model = 'mrm8488/bert-tiny-finetuned-enron-spam-detection'
+    ):
+    '''
+    '''
+    super().__init__()
+    self.device = device
+    self.model = model
+    self.optimizer = optimizer
+
+    self.tokenizer = tokenizer
+
+    self.NUM_EPOCHS = NUM_EPOCHS
+    self.NUM_ITERATIONS = NUM_ITERATIONS
+    self.BATCH_SIZE = BATCH_SIZE
+    self.MAX_LENGTH = MAX_LENGTH
+
+    self.teacher_model = teacher_model
+
+    def get_enron_data(self):
+        '''
+        '''
+        sentences = None
+        targets = None
+        # sentences = [
+        #     'We are very happy that we bought this car.',
+        #     'aquila dave marks just got a call from someone at aquila saying they disliked trading on enrononline anymore . - r'
+        # ]
+        return (sentences, targets)
+
+    def train(self):
+        '''
+        '''
+        teacher = AutoModelForSequenceClassification.from_pretrained(self.teacher_model)
+        teacher_classifier = pipeline('text-classification', model = teacher, tokenizer = self.tokenizer)
+
+        for epoch in range(self.NUM_EPOCHS):
+            for iteration in range(self.NUM_ITERATIONS):
+                sentences, targets = get_enron_data()
+
+                teacher_outputs = classifier(sentences)
+
+                teacher_probabilities = []
+                for result in results:
+                    if result['label'] == 'LABEL_0':
+                        prob = [result['score'], 1 - result['score']]
+                    elif result['label'] == 'LABEL_1':
+                        prob = [1 - result['score'], result['score']]
+
+                    teacher_probabilities.append(prob)
+                
+                teacher_probabilities = torch.tensor(teacher_probabilities)
+
+                sentences = [sentence.split() for sentence in sentences]
+
+                input_list = []
+                for sample_idx in range(self.BATCH_SIZE):
+                    input_ids = tokenizer(
+                        sentences[sample_idx],
+                        padding = 'max_length',
+                        truncation = True,
+                        max_length = self.MAX_LENGTH,
+                        return_tensors = 'pt',
+                        is_split_into_words = True
+                    )['input_ids'][0]
+
+                    input_list.append(input_ids)
+
+                inputs = torch.stack(input_list).to(self.device)
+
+                loss = self.model.loss(inputs, teacher_probabilities, targets)
+
+                message = f'Epoch: {epoch + 1} of {self.NUM_EPOCHS}, Iteration: {iteration + 1} of {self.NUM_ITERATIONS}, Loss: {loss.item()}'
+                print(message)
+
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
 
 if __name__ == '__main__':
     np.random.seed(1234)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    EMBED_DIM = 768
-    BATCH_SIZE = 2
-    MAX_LENGTH = 16
-
-    MODEL_PATH = '../artifacts/MLM/model_2023-07-27_20-32-20.joblib'
+    MODEL_PATH = '../artifacts/MLM/model_2023-07-28_17-59-18.joblib'
     model = load(MODEL_PATH)
+    
+    NUM_EPOCHS = 10
+    NUM_ITERATIONS = 10
+    BATCH_SIZE = 256
+    SEQ_LENGTH = 16
+
+    DATA_PATH = '../data/classification/Enron_spam'
 
     MODEL_VERSION = 2
 
@@ -54,55 +138,13 @@ if __name__ == '__main__':
         transformerEncoder = copy.deepcopy(model.model)
 
     spamDetectionModel = SpamDetectionModel(transformerEncoder, EMBED_DIM, n_classes = 2)
-
-    distillationModel = DistilledFromTinyBert(spamDetectionModel)
-
-    model_name = 'mrm8488/bert-tiny-finetuned-enron-spam-detection'
-    tinyBERTModel = AutoModelForSequenceClassification.from_pretrained(model_name)
+    model = DistilledFromTinyBert(spamDetectionModel)
+    optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
 
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
 
-    sentences = [
-        'We are very happy that we bought this car.',
-        'aquila dave marks just got a call from someone at aquila saying they disliked trading on enrononline anymore . - r'
-    ]
-
-    classifier = pipeline('text-classification', model = tinyBERTModel, tokenizer = tokenizer)
-    results = classifier(sentences)
-    
-    tiny_BERT_probabilities = []
-    true_labels = []
-    for result in results:
-        if result['label'] == 'LABEL_0':
-            prob = [result['score'], 1 - result['score']]
-        elif result['label'] == 'LABEL_1':
-            prob = [1 - result['score'], result['score']]
-
-        true_label = 1 # TODO: Get this true label from the dataset
-
-        tiny_BERT_probabilities.append(prob)
-        true_labels.append(true_label)
-
-    tiny_BERT_probabilities = torch.tensor(tiny_BERT_probabilities)
-    true_labels = torch.tensor(true_labels)
-
-    sentences = [sentence.split() for sentence in sentences]
-
-    input_list = []
-    for sample_idx in range(BATCH_SIZE):
-        input_ids = tokenizer(
-            sentences[sample_idx],
-            padding = 'max_length',
-            truncation = True,
-            max_length = MAX_LENGTH,
-            return_tensors = 'pt',
-            is_split_into_words = True
-        )['input_ids'][0]
-
-        input_list.append(input_ids)
-
-    inputs = torch.stack(input_list).to(device)
-
-    loss = distillationModel.loss(inputs, tiny_BERT_probabilities, true_labels)
-    print(loss.item())
-
+    trainer = DistillationTrainer(
+        device, model, optimizer,
+        tokenizer,
+        NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH
+    )

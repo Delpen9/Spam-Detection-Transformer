@@ -42,7 +42,8 @@ class MLMTrainer:
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH,
         directory_path, VALIDATION_RATIO, VALIDATION_COUNT = None, VALIDATION_EVALUATION_FREQUENCY = 50,
         SAVE_OUTPUT = False, SAVE_MODEL = False,
-        TRAINING_OUTPUT_PATH = '', MODEL_OUTPUT_PATH = '', GRAPH_OUTPUT_PATH = '', LOGGING_OUTPUT_PATH = '../output/logging/output.log'):
+        TRAINING_OUTPUT_PATH = '', MODEL_OUTPUT_PATH = '', GRAPH_OUTPUT_PATH = '', LOGGING_OUTPUT_PATH = '../output/logging/output.log'
+        ):
         '''
         Initialize the MLMTrainer instance with specified parameters.
 
