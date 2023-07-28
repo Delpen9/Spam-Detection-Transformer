@@ -112,11 +112,12 @@ class MLMTrainer:
         validation_count = int(num_files * self.VALIDATION_RATIO) if self.VALIDATION_COUNT == None else self.VALIDATION_COUNT
         
         # 4160 is the row count of each .txt file
-        training_file_index = validation_count + math.floor(4160 / (self.BATCH_SIZE * self.iteration))
-        batch_index_start = 4160 % (self.BATCH_SIZE * self.iteration)
-
+        file_row_count = 4160
+        training_file_index = validation_count + math.floor(file_row_count / (self.BATCH_SIZE * self.iteration))
         filename = directory_list[training_file_index]
 
+        batch_index_start = file_row_count % (self.BATCH_SIZE * self.iteration)
+        
         with open(os.path.join(self.directory_path, filename), 'r') as f:
             file_sentences = f.read().lower().strip().split('\n')
             batch_indices = np.arange(batch_index_start, batch_index_start + self.BATCH_SIZE, 1)
