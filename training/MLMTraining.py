@@ -96,6 +96,7 @@ class MLMTrainer:
         self.validation_output = pd.DataFrame([], columns = ['epoch', 'iteration', 'loss'])
 
         self.timestamp = None
+        self.iteration = 0
 
     def get_training_batch(self):
         '''
@@ -109,18 +110,16 @@ class MLMTrainer:
 
         num_files = len(directory_list)
         validation_count = int(num_files * self.VALIDATION_RATIO) if self.VALIDATION_COUNT == None else self.VALIDATION_COUNT
-        training_count = num_files - validation_count
-        file_probabilities = list(np.concatenate((
-            np.zeros(validation_count),
-            np.ones(training_count) / training_count
-        )))
+        
+        # 4160 is the row count of each .txt file
+        training_file_index = validation_count + math.floor(4160 / (self.BATCH_SIZE * self.iteration))
+        batch_index = 4160 % (self.BATCH_SIZE * self.iteration)
 
-        filename_idx = np.random.choice(len(directory_list), 1, p = file_probabilities)[0]
-        filename = directory_list[filename_idx]
+        filename = directory_list[training_file_index]
 
         with open(os.path.join(self.directory_path, filename), 'r') as f:
             file_sentences = f.read().lower().strip().split('\n')
-            batch_indices = np.random.choice(len(file_sentences), self.BATCH_SIZE, replace = False)
+            batch_indices = np.arange(batch_index, batch_index + self.BATCH_SIZE, 1)
             batch_sentences = [file_sentences[batch_idx] for batch_idx in batch_indices]
             sentences.extend([sentence.split() for sentence in batch_sentences])
 
@@ -271,6 +270,8 @@ class MLMTrainer:
 
         for epoch in range(self.NUM_EPOCHS):
             for iteration in range(self.NUM_ITERATIONS):
+                self.iteration += 1
+
                 sentences = self.get_training_batch()
 
                 inputs, targets = self.encode_sentences(sentences)
@@ -300,18 +301,18 @@ class MLMTrainer:
                         self.validation_output,
                         pd.DataFrame({
                             'epoch': [epoch + 1],
-                            'iteration': [iteration + 1],
+                            'iteration': [self.iteration],
                             'loss': [validation_loss]
                         })], ignore_index = True
                     )
 
-                print(f'Epoch: {epoch + 1} of {self.NUM_EPOCHS}, Iteration: {iteration + 1} of {self.NUM_ITERATIONS}, Loss: {loss.item()}')
+                print(f'Epoch: {epoch + 1} of {self.NUM_EPOCHS}, Iteration: {self.iteration} of {self.NUM_ITERATIONS}, Loss: {loss.item()}')
                 
                 self.training_output = pd.concat([
                     self.training_output,
                     pd.DataFrame({
                         'epoch': [epoch + 1],
-                        'iteration': [iteration + 1],
+                        'iteration': [self.iteration],
                         'loss': [loss.item()]
                     })], ignore_index = True
                 )

@@ -32,6 +32,9 @@ import seaborn as sns
 from datetime import datetime
 import copy
 
+def get_enron_data():
+    return None
+
 if __name__ == '__main__':
     np.random.seed(1234)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

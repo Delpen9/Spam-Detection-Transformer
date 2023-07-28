@@ -1,6 +1,6 @@
 #!/bin/bash
 
-folder="data/masking/openwebtext/openwebtext"
+folder="../data/masking/openwebtext/openwebtext"
 
 # Navigate to the specified folder
 cd "$folder" || exit
@@ -32,7 +32,7 @@ for file in *.txt; do
     sed -i '/^$/d' "$file"
 done
 
-# # iterate over every file in the folder
+# iterate over every file in the folder
 for file in *.txt; do
     # Create temp file
     tmp_file="${file}.tmp"
@@ -41,4 +41,13 @@ for file in *.txt; do
     grep -E '.{100,}' "$file" > "$tmp_file"
 
     mv "$tmp_file" "$file"
+done
+
+# iterate over every file in the folder
+for file in *.txt; do
+    # Use head to get the first 4160 lines and save them to a temp file
+    head -n 4160 "$file" > "${file}.tmp"
+
+    # Replace the original file with the temp file
+    mv "${file}.tmp" "$file"
 done
