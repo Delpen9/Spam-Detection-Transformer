@@ -17,6 +17,7 @@ import os
 # Standard Data Science Libraries
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 import pandas as pd
 import math
@@ -38,74 +39,124 @@ class DistillationTrainer:
         device, model, optimizer,
         tokenizer,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH,
-        teacher_model = 'mrm8488/bert-tiny-finetuned-enron-spam-detection'
+        teacher_model = 'mrm8488/bert-tiny-finetuned-enron-spam-detection',
+        classification_data_path = '../data/classification/Enron_spam'
     ):
-    '''
-    '''
-    super().__init__()
-    self.device = device
-    self.model = model
-    self.optimizer = optimizer
+        '''
+        '''
+        super().__init__()
+        self.device = device
+        self.model = model
+        self.optimizer = optimizer
 
-    self.tokenizer = tokenizer
+        self.tokenizer = tokenizer
 
-    self.NUM_EPOCHS = NUM_EPOCHS
-    self.NUM_ITERATIONS = NUM_ITERATIONS
-    self.BATCH_SIZE = BATCH_SIZE
-    self.MAX_LENGTH = MAX_LENGTH
+        self.NUM_EPOCHS = NUM_EPOCHS
+        self.NUM_ITERATIONS = NUM_ITERATIONS
+        self.BATCH_SIZE = BATCH_SIZE
+        self.MAX_LENGTH = MAX_LENGTH
 
-    self.teacher_model = teacher_model
+        self.teacher_model = teacher_model
+        self.classification_data_path = classification_data_path
+
+        self.enron_data_df = self.prepare_enron_data()
+
+        self.step = 0
+
+    def prepare_enron_data(self):
+        enron_groups = [f'enron{i}' for i in range(1, 7)]
+
+        ham_enron_directories = np.array([
+            f'{self.classification_data_path}/{group}/ham'
+            for group in enron_groups
+        ])
+
+        spam_enron_directories = np.array([
+            f'{self.classification_data_path}/{group}/spam'
+            for group in enron_groups
+        ])
+
+        ham_enron_files = []
+        for ham_enron_directory in ham_enron_directories:
+            new_directories = [fr"{ham_enron_directory}/{filepath.decode('utf-8')}" for filepath in os.listdir(ham_enron_directory)]
+            ham_enron_files.extend(new_directories)
+        ham_enron_files = [str(filename) for filename in ham_enron_files]
+        ham_enron_files = np.array(ham_enron_files)
+
+        spam_enron_files = []
+        for spam_enron_directory in spam_enron_directories:
+            new_directories = [fr"{spam_enron_directory}/{filepath.decode('utf-8')}" for filepath in os.listdir(spam_enron_directory)]
+            spam_enron_files.extend(new_directories)
+        spam_enron_files = [str(filename) for filename in spam_enron_files]
+        spam_enron_files = np.array(spam_enron_files)
+
+        ham_enron_np = np.vstack((ham_enron_files, np.zeros(len(ham_enron_files)))).T
+        ham_enron_df = pd.DataFrame(ham_enron_np, columns = ['Path', 'Target'])
+
+        spam_enron_np = np.vstack((spam_enron_files, np.ones(len(spam_enron_files)))).T
+        spam_enron_df = pd.DataFrame(spam_enron_np, columns = ['Path', 'Target'])
+
+        endron_data_df = pd.concat((ham_enron_df, spam_enron_df), axis = 0).sample(frac = 1).astype({
+            'Path': str,
+            'Target': float
+        })
+        return endron_data_df
 
     def get_enron_data(self):
         '''
         '''
-        sentences = None
-        targets = None
-        # sentences = [
-        #     'We are very happy that we bought this car.',
-        #     'aquila dave marks just got a call from someone at aquila saying they disliked trading on enrononline anymore . - r'
-        # ]
-        return (sentences, targets)
+        start_index = self.step * self.BATCH_SIZE
+        end_index = (self.step + 1) * self.BATCH_SIZE
+
+        sample_rows_df = self.enron_data_df.iloc[start_index : end_index]
+
+        contents = []
+        for _, row in sample_rows_df.iterrows():
+            filename = row['Path']
+            with open(filename, 'r', errors = 'replace') as f:
+                content = f.read()
+                contents.append(content)
+
+        targets = torch.tensor(sample_rows_df['Target'].to_numpy().flatten()).long()
+
+        contents = [str(content) for content in contents]
+
+        return (contents, targets, len(targets))
 
     def train(self):
         '''
         '''
-        teacher = AutoModelForSequenceClassification.from_pretrained(self.teacher_model)
-        teacher_classifier = pipeline('text-classification', model = teacher, tokenizer = self.tokenizer)
+        teacher_classifier = AutoModelForSequenceClassification.from_pretrained(self.teacher_model)
+        # teacher_classifier = pipeline('text-classification', model = teacher, tokenizer = self.tokenizer)
 
         for epoch in range(self.NUM_EPOCHS):
             for iteration in range(self.NUM_ITERATIONS):
-                sentences, targets = get_enron_data()
+                # batch_size is explicitly mentioned here to handle end of dataframe
+                contents, targets, batch_size = self.get_enron_data()
 
-                teacher_outputs = classifier(sentences)
+                self.step += 1
 
-                teacher_probabilities = []
-                for result in results:
-                    if result['label'] == 'LABEL_0':
-                        prob = [result['score'], 1 - result['score']]
-                    elif result['label'] == 'LABEL_1':
-                        prob = [1 - result['score'], result['score']]
-
-                    teacher_probabilities.append(prob)
-                
-                teacher_probabilities = torch.tensor(teacher_probabilities)
-
-                sentences = [sentence.split() for sentence in sentences]
+                contents = [content.split() for content in contents]
 
                 input_list = []
-                for sample_idx in range(self.BATCH_SIZE):
-                    input_ids = tokenizer(
-                        sentences[sample_idx],
-                        padding = 'max_length',
-                        truncation = True,
-                        max_length = self.MAX_LENGTH,
-                        return_tensors = 'pt',
-                        is_split_into_words = True
-                    )['input_ids'][0]
+                for sample_idx in range(batch_size):
+                    try:
+                        input_ids = tokenizer(
+                            contents[sample_idx],
+                            padding = 'max_length',
+                            truncation = True,
+                            max_length = self.MAX_LENGTH,
+                            return_tensors = 'pt',
+                            is_split_into_words = True
+                        )['input_ids'][0]
 
-                    input_list.append(input_ids)
+                        input_list.append(input_ids)
+                    except:
+                        pass
 
                 inputs = torch.stack(input_list).to(self.device)
+
+                teacher_probabilities = F.softmax(teacher_classifier(inputs)['logits'])
 
                 loss = self.model.loss(inputs, teacher_probabilities, targets)
 
@@ -125,10 +176,10 @@ if __name__ == '__main__':
     
     NUM_EPOCHS = 10
     NUM_ITERATIONS = 10
+    LEARNING_RATE = 1e-2
+    EMBED_DIM = 768
     BATCH_SIZE = 256
     SEQ_LENGTH = 16
-
-    DATA_PATH = '../data/classification/Enron_spam'
 
     MODEL_VERSION = 2
 
@@ -148,3 +199,5 @@ if __name__ == '__main__':
         tokenizer,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH
     )
+
+    trainer.train()

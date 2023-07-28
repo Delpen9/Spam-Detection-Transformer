@@ -4,6 +4,7 @@ from .MultiHeadAttention import MultiHeadAttention
 from .TransformerBlock import TransformerBlock
 from .Embedding import Embedding
 from .PositionalEmbedding import PositionalEmbedding
+
 class TransformerEncoder(nn.Module):
     """
     Args:
