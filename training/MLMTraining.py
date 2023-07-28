@@ -105,6 +105,11 @@ class MLMTrainer:
         Returns:
         List of sentences for training.
         '''
+        assert self.BATCH_SIZE < 4160, \
+        'The batch size should not be greater than the file row count (4160)'
+
+        # TODO: Get this code to handle when batch size goes over the file row count
+
         sentences = []
         directory_list = os.listdir(self.directory_path)
 
@@ -113,16 +118,37 @@ class MLMTrainer:
         
         # 4160 is the row count of each .txt file
         file_row_count = 4160
-        training_file_index = validation_count + math.floor(file_row_count / (self.BATCH_SIZE * self.iteration))
-        filename = directory_list[training_file_index]
+        training_file_start_index = validation_count + math.floor(file_row_count / (self.BATCH_SIZE * self.iteration))
 
         batch_index_start = file_row_count % (self.BATCH_SIZE * self.iteration)
-        
-        with open(os.path.join(self.directory_path, filename), 'r') as f:
-            file_sentences = f.read().lower().strip().split('\n')
-            batch_indices = np.arange(batch_index_start, batch_index_start + self.BATCH_SIZE, 1)
-            batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
-            sentences.extend([sentence.split() for sentence in batch_sentences])
+        batch_index_end = batch_index_start + self.BATCH_SIZE
+
+        # Handle file overflow
+        if batch_index_end >= file_row_count:
+            filenames = directory_list[training_file_start_index : training_file_start_index + 2]
+
+            with open(os.path.join(self.directory_path, filenames[0]), 'r') as f:
+                file_sentences = f.read().lower().strip().split('\n')
+                batch_indices = np.arange(batch_index_start, 4160, 1)
+                batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
+                sentences.extend([sentence.split() for sentence in batch_sentences])
+
+            batch_index_end %= file_row_count
+            with open(os.path.join(self.directory_path, filenames[1]), 'r') as f:
+                file_sentences = f.read().lower().strip().split('\n')
+                batch_indices = np.arange(0, batch_index_end, 1)
+                batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
+                sentences.extend([sentence.split() for sentence in batch_sentences])
+
+        # Base-case: No file overflow
+        else:
+            filenames = directory_list[training_file_start_index]
+
+            with open(os.path.join(self.directory_path, filenames), 'r') as f:
+                file_sentences = f.read().lower().strip().split('\n')
+                batch_indices = np.arange(batch_index_start, batch_index_start + self.BATCH_SIZE, 1)
+                batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
+                sentences.extend([sentence.split() for sentence in batch_sentences])
 
         return sentences
 
