@@ -62,6 +62,7 @@ class DistillationTrainer:
         self.teacher_model = teacher_model
         self.classification_data_path = classification_data_path
 
+        np.random.seed(1234)
         self.enron_data_df = self.prepare_enron_data()
 
         self.step = 0
