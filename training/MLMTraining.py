@@ -484,13 +484,13 @@ if __name__ == '__main__':
 
     VOCAB_SIZE = 30522
     EMBED_DIM = 768
-    NUM_HEADS = 6
+    NUM_HEADS = 12
     FF_DIM = 3072
     NUM_BLOCKS = 1 # TODO: Increase on GPU
     DROPOUT = 0.2
     SEQ_LENGTH = 16 # TODO: Increase on GPU
     MASK_RATIO = 0.15
-    EXPANSION_FACTOR = 2
+    EXPANSION_FACTOR = 1
     LEARNING_RATE = 1e-2
     MODEL_VERSION = 2
     MASK_ID = 103 # NOTE: Specific to BERTTokenizerFast
