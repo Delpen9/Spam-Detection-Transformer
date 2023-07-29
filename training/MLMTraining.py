@@ -17,6 +17,7 @@ import os
 # Standard Data Science Libraries
 import torch
 import torch.nn as nn
+from torch.cuda.amp import autocast, GradScaler
 import numpy as np
 import pandas as pd
 import math
@@ -38,7 +39,7 @@ import time
 class MLMTrainer:
     def __init__(
         self,
-        device, model, optimizer, criterion,
+        device, model, optimizer, criterion, scaler,
         tokenizer, MASK_ID, MASK_RATIO,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH,
         directory_path, VALIDATION_RATIO, VALIDATION_COUNT = None, VALIDATION_EVALUATION_FREQUENCY = 50,
@@ -344,14 +345,17 @@ class MLMTrainer:
                     inputs, targets = self.encode_sentences(sentences)
                     self.mask_inputs(inputs, sentences)
 
-                    outputs = self.model(inputs)
-                    reshaped_outputs = outputs.view(-1, outputs.size(-1)).clone()
-                    desired_target = targets.view(-1).clone()
-
-                    loss = self.criterion(reshaped_outputs, desired_target)
                     self.optimizer.zero_grad()
-                    loss.backward()
-                    self.optimizer.step()
+
+                    with autocast():
+                        outputs = self.model(inputs)
+                        reshaped_outputs = outputs.view(-1, outputs.size(-1)).clone()
+                        desired_target = targets.view(-1).clone()
+                        loss = self.criterion(reshaped_outputs, desired_target)
+
+                    scaler.scale(loss).backward()
+                    scaler.step(optimizer)
+                    scaler.update()
 
                     if self.step % 50000:
                         self.checkpoint()
@@ -475,7 +479,7 @@ class MLMTrainer:
 
 if __name__ == '__main__':
     torch.cuda.empty_cache()
-    
+
     np.random.seed(1234)
     DIRECTORY_PATH = '../data/masking/openwebtext/openwebtext'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -520,6 +524,7 @@ if __name__ == '__main__':
                 dropout = DROPOUT
             ).to(device)
             optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
+            scaler = GradScaler()
             criterion = nn.CrossEntropyLoss()
 
         elif MODEL_VERSION == 2:
@@ -534,6 +539,7 @@ if __name__ == '__main__':
             ).to(device)
             model = PretrainedOnMLM(transformer_encoder, EMBED_DIM, VOCAB_SIZE).to(device)
             optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
+            scaler = GradScaler()
             criterion = nn.CrossEntropyLoss()
     else:
         model = load(f'{LOAD_MODEL_PATH}')
@@ -543,7 +549,7 @@ if __name__ == '__main__':
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
 
     trainer = MLMTrainer(
-        device, model, optimizer, criterion,
+        device, model, optimizer, criterion, scaler,
         tokenizer, MASK_ID, MASK_RATIO,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH,
         DIRECTORY_PATH, VALIDATION_RATIO, VALIDATION_COUNT, VALIDATION_EVALUATION_FREQUENCY,
