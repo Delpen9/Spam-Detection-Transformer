@@ -410,7 +410,7 @@ class MLMTrainer:
 
                     time_elapsed = time.time() - self.time
                     print(f'Time Elapsed: {time_elapsed}')
-                    print(f'Estimated TTC (hours): {self.NUM_ITERATIONS / ((iteration + 1) * 60) * time_elapsed}')
+                    print(f'Estimated TTC (hours): {self.NUM_ITERATIONS / ((iteration + 1) * 3600) * time_elapsed}')
                     
                     self.training_output = pd.concat([
                         self.training_output,
