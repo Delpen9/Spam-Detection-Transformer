@@ -38,7 +38,7 @@ import time
 class MLMTrainer:
     def __init__(
         self,
-        device, model, optimizer, criterion, scaler,
+        device, model, optimizer, criterion,
         tokenizer, MASK_ID, MASK_RATIO,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH,
         directory_path, VALIDATION_RATIO, VALIDATION_COUNT = None, VALIDATION_EVALUATION_FREQUENCY = 50,
@@ -524,7 +524,6 @@ if __name__ == '__main__':
                 dropout = DROPOUT
             ).to(device)
             optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
-            scaler = GradScaler()
             criterion = nn.CrossEntropyLoss()
 
         elif MODEL_VERSION == 2:
@@ -539,7 +538,6 @@ if __name__ == '__main__':
             ).to(device)
             model = PretrainedOnMLM(transformer_encoder, EMBED_DIM, VOCAB_SIZE).to(device)
             optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
-            scaler = GradScaler()
             criterion = nn.CrossEntropyLoss()
     else:
         model = load(f'{LOAD_MODEL_PATH}')
@@ -549,7 +547,7 @@ if __name__ == '__main__':
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
 
     trainer = MLMTrainer(
-        device, model, optimizer, criterion, scaler,
+        device, model, optimizer, criterion,
         tokenizer, MASK_ID, MASK_RATIO,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH,
         DIRECTORY_PATH, VALIDATION_RATIO, VALIDATION_COUNT, VALIDATION_EVALUATION_FREQUENCY,
