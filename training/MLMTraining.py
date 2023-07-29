@@ -461,7 +461,7 @@ if __name__ == '__main__':
     EMBED_DIM = 768
     NUM_HEADS = 12
     FF_DIM = 3072
-    NUM_BLOCKS = 5 # TODO: Increase on GPU
+    NUM_BLOCKS = 1 # TODO: Increase on GPU
     DROPOUT = 0.2
     SEQ_LENGTH = 64 # TODO: Increase on GPU
     MASK_RATIO = 0.15
