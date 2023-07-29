@@ -41,7 +41,7 @@ class DistillationTrainer:
         self,
         device, model, optimizer,
         tokenizer,
-        FREEZE_EARLY_LAYERS,
+        FREEZE_EARLY_LAYERS, VALIDATION_DATA_PERCENTAGE,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH,
         teacher_model = 'mrm8488/bert-tiny-finetuned-enron-spam-detection',
         classification_data_path = '../data/classification/Enron_spam'
@@ -56,6 +56,7 @@ class DistillationTrainer:
         self.tokenizer = tokenizer
 
         self.FREEZE_EARLY_LAYERS = FREEZE_EARLY_LAYERS
+        self.VALIDATION_DATA_PERCENTAGE = VALIDATION_DATA_PERCENTAGE
 
         self.NUM_EPOCHS = NUM_EPOCHS
         self.NUM_ITERATIONS = NUM_ITERATIONS
@@ -67,6 +68,9 @@ class DistillationTrainer:
 
         np.random.seed(1234)
         self.enron_data_df = self.prepare_enron_data()
+
+        self.training_output = pd.DataFrame([], columns = ['epoch', 'iteration', 'loss'])
+        self.validation_output = pd.DataFrame([], columns = ['epoch', 'iteration', 'loss'])
 
         self.step = 0
 
@@ -109,11 +113,12 @@ class DistillationTrainer:
         })
         return endron_data_df
 
-    def get_enron_data(self):
+    def get_enron_training_data(self):
         '''
         '''
-        start_index = self.step * self.BATCH_SIZE
-        end_index = (self.step + 1) * self.BATCH_SIZE
+        validation_end_index = math.floor(33716 * self.VALIDATION_DATA_PERCENTAGE)
+        start_index = validation_end_index + self.step * self.BATCH_SIZE
+        end_index = validation_end_index + (self.step + 1) * self.BATCH_SIZE
 
         sample_rows_df = self.enron_data_df.iloc[start_index : end_index]
 
@@ -130,6 +135,68 @@ class DistillationTrainer:
 
         return (contents, targets, len(targets))
 
+    def get_enron_validation_data(self):
+        '''
+        '''
+        start_index = 0
+        end_index = math.floor(33716 * self.VALIDATION_DATA_PERCENTAGE)
+
+        sample_rows_df = self.enron_data_df.iloc[start_index : end_index]
+
+        contents = []
+        for _, row in sample_rows_df.iterrows():
+            filename = row['Path']
+            with open(filename, 'r', errors = 'replace') as f:
+                content = f.read()
+                contents.append(content)
+
+        targets = torch.tensor(sample_rows_df['Target'].to_numpy().flatten()).long()
+
+        contents = [str(content) for content in contents]
+
+        return (contents, targets)
+
+    def chunks(self, contents, targets):
+        '''
+        Generator to yield chunks of sentences of size BATCH_SIZE.
+
+        Parameters:
+        sentences: List of sentences to split into chunks.
+
+        Returns:
+        Generator yielding chunks of sentences of size BATCH_SIZE.
+        '''
+        for i in range(0, len(contents), self.BATCH_SIZE):
+            chunk = (contents[i : i + self.BATCH_SIZE], targets[i : i + self.BATCH_SIZE])
+            if len(chunk[0]) == self.BATCH_SIZE:
+                yield chunk
+
+    def calculate_validation_loss(self, teacher_classifier):
+        '''
+        Calculate validation loss for the current state of the model.
+
+        Returns:
+        Validation loss.
+        '''
+        self.model.eval()
+
+        validation_loss = 0.0
+
+        with torch.no_grad():
+            contents, targets = self.get_enron_validation_data()
+
+            for batch in self.chunks(contents, targets):
+                loss = self.calculate_loss(contents, targets, self.BATCH_SIZE, teacher_classifier)
+
+                message = f'Validation loss for batch: {loss.item()}'
+                print(message)
+
+                validation_loss += loss.item()
+
+        validation_loss /= float(math.floor(len(contents) / self.BATCH_SIZE))
+
+        return validation_loss
+
     def freeze_layers(self):
         '''
         '''
@@ -144,6 +211,33 @@ class DistillationTrainer:
         for param in self.model.model.model.parameters():
             param.requires_grad = True
 
+    def calculate_loss(self, contents, targets, batch_size, teacher_classifier):
+        contents = [content.split() for content in contents]
+
+        input_list = []
+        for sample_idx in range(batch_size):
+            try:
+                input_ids = tokenizer(
+                    contents[sample_idx],
+                    padding = 'max_length',
+                    truncation = True,
+                    max_length = self.MAX_LENGTH,
+                    return_tensors = 'pt',
+                    is_split_into_words = True
+                )['input_ids'][0]
+
+                input_list.append(input_ids)
+            except:
+                pass
+
+        inputs = torch.stack(input_list).to(self.device)
+
+        teacher_probabilities = F.softmax(teacher_classifier(inputs)['logits'])
+
+        loss = self.model.loss(inputs, teacher_probabilities, targets)
+
+        return loss
+
     def train(self):
         '''
         '''
@@ -155,33 +249,9 @@ class DistillationTrainer:
         for epoch in range(self.NUM_EPOCHS):
             for iteration in range(self.NUM_ITERATIONS):
                 # batch_size is explicitly mentioned here to handle end of dataframe
-                contents, targets, batch_size = self.get_enron_data()
+                contents, targets, batch_size = self.get_enron_training_data()
 
-                self.step += 1
-
-                contents = [content.split() for content in contents]
-
-                input_list = []
-                for sample_idx in range(batch_size):
-                    try:
-                        input_ids = tokenizer(
-                            contents[sample_idx],
-                            padding = 'max_length',
-                            truncation = True,
-                            max_length = self.MAX_LENGTH,
-                            return_tensors = 'pt',
-                            is_split_into_words = True
-                        )['input_ids'][0]
-
-                        input_list.append(input_ids)
-                    except:
-                        pass
-
-                inputs = torch.stack(input_list).to(self.device)
-
-                teacher_probabilities = F.softmax(teacher_classifier(inputs)['logits'])
-
-                loss = self.model.loss(inputs, teacher_probabilities, targets)
+                loss = self.calculate_loss(contents, targets, batch_size, teacher_classifier)
 
                 message = f'Epoch: {epoch + 1} of {self.NUM_EPOCHS}, Iteration: {iteration + 1} of {self.NUM_ITERATIONS}, Loss: {loss.item()}'
                 print(message)
@@ -189,6 +259,10 @@ class DistillationTrainer:
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
+
+                self.step += 1
+                if self.step % 50 == 0:
+                    validation_loss = self.calculate_validation_loss(teacher_classifier)
         
         if self.FREEZE_EARLY_LAYERS == True:
             self.unfreeze_layers()
@@ -200,12 +274,14 @@ if __name__ == '__main__':
     MODEL_PATH = '../artifacts/MLM/model_2023-07-28_17-59-18.joblib'
     model = load(MODEL_PATH)
     
-    BATCH_SIZE = 256
-    NUM_EPOCHS = 10
-    NUM_ITERATIONS = math.floor(33716 / BATCH_SIZE)
     LEARNING_RATE = 1e-2
     EMBED_DIM = 768
     SEQ_LENGTH = 16
+
+    VALIDATION_DATA_PERCENTAGE = 0.1
+    BATCH_SIZE = 256
+    NUM_EPOCHS = 10
+    NUM_ITERATIONS = math.floor(33716 * (1 - VALIDATION_DATA_PERCENTAGE) / BATCH_SIZE)
 
     FREEZE_EARLY_LAYERS = True
 
@@ -225,7 +301,7 @@ if __name__ == '__main__':
     trainer = DistillationTrainer(
         device, model, optimizer,
         tokenizer,
-        FREEZE_EARLY_LAYERS,
+        FREEZE_EARLY_LAYERS, VALIDATION_DATA_PERCENTAGE,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH
     )
 

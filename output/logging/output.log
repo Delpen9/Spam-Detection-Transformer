@@ -4,142 +4,29 @@ Batch file index: 1; Row index start: 0; Row index end: 256.
 #########################
 Calculate validation loss
 #########################
-Validation loss for batch: 7.636810779571533
-Validation loss for batch: 7.552134990692139
-Validation loss for batch: 7.542292594909668
-Validation loss for batch: 7.638195037841797
-Validation loss for batch: 7.527587413787842
-Validation loss for batch: 7.5701398849487305
-Validation loss for batch: 7.710588455200195
-Validation loss for batch: 7.661159515380859
-Validation loss for batch: 7.563580513000488
-Validation loss for batch: 7.580142498016357
-Validation loss for batch: 7.571130752563477
-Validation loss for batch: 7.570133209228516
-Validation loss for batch: 7.632515907287598
-Validation loss for batch: 7.56014347076416
-Validation loss for batch: 7.675374984741211
-Validation loss for batch: 7.583408355712891
+Validation loss for batch: 7.809494495391846
+Validation loss for batch: 7.7603349685668945
+Validation loss for batch: 7.724090099334717
+Validation loss for batch: 7.847418308258057
+Validation loss for batch: 7.758502960205078
+Validation loss for batch: 7.753785610198975
+Validation loss for batch: 7.921272277832031
+Validation loss for batch: 7.846078395843506
+Validation loss for batch: 7.75217342376709
+Validation loss for batch: 7.763178825378418
+Validation loss for batch: 7.699328422546387
+Validation loss for batch: 7.755518436431885
+Validation loss for batch: 7.841810703277588
+Validation loss for batch: 7.772414207458496
+Validation loss for batch: 7.8165740966796875
+Validation loss for batch: 7.836663722991943
 #########################
-Average validation loss for all batches: 7.598458647727966
+Average validation loss for all batches: 7.791164934635162
 #########################
 
 #########################
 Training loss
 #########################
-Epoch: 1 of 3, Iteration: 1 of 7, Loss: 10.499359130859375
+Epoch: 1 of 10, Iteration: 1 of 187499, Loss: 10.556081771850586
 Batch file index: 1; Row index start: 256; Row index end: 512.
 
-Epoch: 1 of 3, Iteration: 2 of 7, Loss: 7.510273456573486
-Batch file index: 1; Row index start: 512; Row index end: 768.
-
-Epoch: 1 of 3, Iteration: 3 of 7, Loss: 8.73628044128418
-Batch file index: 1; Row index start: 768; Row index end: 1024.
-
-Epoch: 1 of 3, Iteration: 4 of 7, Loss: 9.840831756591797
-Batch file index: 1; Row index start: 1024; Row index end: 1280.
-
-Epoch: 1 of 3, Iteration: 5 of 7, Loss: 9.62333869934082
-Batch file index: 1; Row index start: 1280; Row index end: 1536.
-
-Epoch: 1 of 3, Iteration: 6 of 7, Loss: 8.87909984588623
-Batch file index: 1; Row index start: 1536; Row index end: 1792.
-
-Epoch: 1 of 3, Iteration: 7 of 7, Loss: 8.739255905151367
-Batch file index: 1; Row index start: 1792; Row index end: 2048.
-
-
-#########################
-Calculate validation loss
-#########################
-Validation loss for batch: 7.779431343078613
-Validation loss for batch: 7.690213680267334
-Validation loss for batch: 7.4676008224487305
-Validation loss for batch: 7.877527713775635
-Validation loss for batch: 7.752528190612793
-Validation loss for batch: 7.513434410095215
-Validation loss for batch: 7.894040107727051
-Validation loss for batch: 7.820402145385742
-Validation loss for batch: 8.207292556762695
-Validation loss for batch: 7.7816596031188965
-Validation loss for batch: 7.98099946975708
-Validation loss for batch: 7.629745960235596
-Validation loss for batch: 7.57712984085083
-Validation loss for batch: 7.613027572631836
-Validation loss for batch: 7.9087114334106445
-Validation loss for batch: 7.865090370178223
-#########################
-Average validation loss for all batches: 7.772427201271057
-#########################
-
-#########################
-Training loss
-#########################
-Epoch: 2 of 3, Iteration: 1 of 7, Loss: 8.175882339477539
-Batch file index: 1; Row index start: 2048; Row index end: 2304.
-
-Epoch: 2 of 3, Iteration: 2 of 7, Loss: 7.789003372192383
-Batch file index: 1; Row index start: 2304; Row index end: 2560.
-
-Epoch: 2 of 3, Iteration: 3 of 7, Loss: 7.423703193664551
-Batch file index: 1; Row index start: 2560; Row index end: 2816.
-
-Epoch: 2 of 3, Iteration: 4 of 7, Loss: 7.652172565460205
-Batch file index: 1; Row index start: 2816; Row index end: 3072.
-
-Epoch: 2 of 3, Iteration: 5 of 7, Loss: 7.4015326499938965
-Batch file index: 1; Row index start: 3072; Row index end: 3328.
-
-Epoch: 2 of 3, Iteration: 6 of 7, Loss: 7.061136245727539
-Batch file index: 1; Row index start: 3328; Row index end: 3584.
-
-Epoch: 2 of 3, Iteration: 7 of 7, Loss: 6.869958400726318
-Batch file index: 1; Row index start: 3584; Row index end: 3840.
-
-
-#########################
-Calculate validation loss
-#########################
-Validation loss for batch: 5.963138103485107
-Validation loss for batch: 5.752371788024902
-Validation loss for batch: 5.66483211517334
-Validation loss for batch: 6.010109901428223
-Validation loss for batch: 5.889803409576416
-Validation loss for batch: 5.716576099395752
-Validation loss for batch: 6.036984920501709
-Validation loss for batch: 6.059103488922119
-Validation loss for batch: 6.508487224578857
-Validation loss for batch: 6.007934093475342
-Validation loss for batch: 6.076493740081787
-Validation loss for batch: 5.876894950866699
-Validation loss for batch: 5.9224114418029785
-Validation loss for batch: 5.671724796295166
-Validation loss for batch: 6.039322853088379
-Validation loss for batch: 6.072968482971191
-#########################
-Average validation loss for all batches: 5.954322338104248
-#########################
-
-#########################
-Training loss
-#########################
-Epoch: 3 of 3, Iteration: 1 of 7, Loss: 6.507899284362793
-Batch file index: 1; Row index start: 3840; Row index end: 4096.
-
-Epoch: 3 of 3, Iteration: 2 of 7, Loss: 5.394140720367432
-Batch file index: 1; Row index start: 4096; Row index end: 4160.
-Batch file index: 2; Row index start: 0; Row index end: 192.
-
-Epoch: 3 of 3, Iteration: 3 of 7, Loss: 5.16572904586792
-Batch file index: 2; Row index start: 192; Row index end: 448.
-
-Epoch: 3 of 3, Iteration: 4 of 7, Loss: 5.0947699546813965
-Batch file index: 2; Row index start: 448; Row index end: 704.
-
-Epoch: 3 of 3, Iteration: 5 of 7, Loss: 5.152566909790039
-Batch file index: 2; Row index start: 704; Row index end: 960.
-
-Epoch: 3 of 3, Iteration: 6 of 7, Loss: 4.454875946044922
-Batch file index: 2; Row index start: 960; Row index end: 1216.
-
-Epoch: 3 of 3, Iteration: 7 of 7, Loss: 4.236155033111572
