@@ -357,7 +357,7 @@ class MLMTrainer:
                     scaler.step(optimizer)
                     scaler.update()
 
-                    if self.step % 50000:
+                    if self.step % 5000:
                         self.checkpoint()
 
                     if iteration % self.VALIDATION_EVALUATION_FREQUENCY == 0:
@@ -414,7 +414,9 @@ class MLMTrainer:
 
                     time_elapsed = time.time() - self.time
                     print(f'Time Elapsed (seconds): {time_elapsed}')
-                    print(f'Estimated TTC (hours): {self.NUM_ITERATIONS / ((iteration + 1) * 3600) * time_elapsed}')
+
+                    time_to_completion = self.NUM_EPOCHS * self.NUM_ITERATIONS / ((iteration + 1) * 3600) * time_elapsed
+                    print(f'Estimated TTC (hours): {time_to_completion}')
                     
                     self.training_output = pd.concat([
                         self.training_output,
