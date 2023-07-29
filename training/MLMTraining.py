@@ -461,9 +461,9 @@ if __name__ == '__main__':
     EMBED_DIM = 768
     NUM_HEADS = 12
     FF_DIM = 3072
-    NUM_BLOCKS = 1 # TODO: Increase on GPU
+    NUM_BLOCKS = 5 # TODO: Increase on GPU
     DROPOUT = 0.2
-    SEQ_LENGTH = 16 # TODO: Increase on GPU
+    SEQ_LENGTH = 64 # TODO: Increase on GPU
     MASK_RATIO = 0.15
     EXPANSION_FACTOR = 4
     LEARNING_RATE = 1e-2
@@ -473,7 +473,7 @@ if __name__ == '__main__':
     BATCH_SIZE = 256 # TODO: Increase on GPU
     VALIDATION_RATIO = 0.05 # NOTE: Used if VALIDATION_COUNT = None
     VALIDATION_COUNT = 1 # NOTE: Overrides validation ratio; represents number of files used for validation calculation
-    VALIDATION_EVALUATION_FREQUENCY = 7 # NOTE: How often to evaluate the validation set in iterations
+    VALIDATION_EVALUATION_FREQUENCY = 100 # NOTE: How often to evaluate the validation set in iterations
     NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
                     else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
 
