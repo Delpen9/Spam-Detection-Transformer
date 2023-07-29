@@ -17,7 +17,6 @@ import os
 # Standard Data Science Libraries
 import torch
 import torch.nn as nn
-from torch.cuda.amp import autocast, GradScaler
 import numpy as np
 import pandas as pd
 import math
@@ -349,17 +348,14 @@ class MLMTrainer:
                     inputs, targets = self.encode_sentences(sentences)
                     self.mask_inputs(inputs, sentences)
 
+                    outputs = self.model(inputs)
+                    reshaped_outputs = outputs.view(-1, outputs.size(-1)).clone()
+                    desired_target = targets.view(-1).clone()
+                    loss = self.criterion(reshaped_outputs, desired_target)
+
                     self.optimizer.zero_grad()
-
-                    with autocast():
-                        outputs = self.model(inputs)
-                        reshaped_outputs = outputs.view(-1, outputs.size(-1)).clone()
-                        desired_target = targets.view(-1).clone()
-                        loss = self.criterion(reshaped_outputs, desired_target)
-
-                    scaler.scale(loss).backward()
-                    scaler.step(optimizer)
-                    scaler.update()
+                    loss.backward()
+                    self.optimizer.step()
 
                     if self.step % 5000:
                         self.checkpoint()
