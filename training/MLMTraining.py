@@ -331,8 +331,6 @@ class MLMTrainer:
             self.training_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/training_output_{self.timestamp}.csv', index = False)
             self.validation_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/validation_output_{self.timestamp}.csv', index = False)
 
-        self.save_graphs('Training/Validation Loss Curves for Masked Language Model')
-
     def train(self):
         '''
         Train the model using the specified optimizer and criterion. 
@@ -562,3 +560,5 @@ if __name__ == '__main__':
     )
 
     trainer.train()
+    
+    trainer.save_graphs('Training/Validation Loss Curves for Masked Language Model')
