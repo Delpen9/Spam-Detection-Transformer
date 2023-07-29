@@ -486,7 +486,7 @@ if __name__ == '__main__':
 
     VOCAB_SIZE = 30522
     EMBED_DIM = 768
-    NUM_HEADS = 6
+    NUM_HEADS = 12
     FF_DIM = 3072
     NUM_BLOCKS = 1 # TODO: Increase on GPU
     DROPOUT = 0.2
@@ -497,7 +497,7 @@ if __name__ == '__main__':
     MODEL_VERSION = 2
     MASK_ID = 103 # NOTE: Specific to BERTTokenizerFast
     NUM_EPOCHS = 1
-    BATCH_SIZE = 1024 # TODO: Increase on GPU
+    BATCH_SIZE = 512 # TODO: Increase on GPU
     VALIDATION_RATIO = 0.05 # NOTE: Used if VALIDATION_COUNT = None
     VALIDATION_COUNT = 1 # NOTE: Overrides validation ratio; represents number of files used for validation calculation
     VALIDATION_EVALUATION_FREQUENCY = 1000 # NOTE: How often to evaluate the validation set in iterations
