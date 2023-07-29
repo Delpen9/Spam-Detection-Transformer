@@ -486,11 +486,11 @@ if __name__ == '__main__':
     DROPOUT = 0.2
     SEQ_LENGTH = 16 # TODO: Increase on GPU
     MASK_RATIO = 0.15
-    EXPANSION_FACTOR = 4
+    EXPANSION_FACTOR = 2
     LEARNING_RATE = 1e-2
     MODEL_VERSION = 2
     MASK_ID = 103 # NOTE: Specific to BERTTokenizerFast
-    NUM_EPOCHS = 3
+    NUM_EPOCHS = 1
     BATCH_SIZE = 512 # TODO: Increase on GPU
     VALIDATION_RATIO = 0.05 # NOTE: Used if VALIDATION_COUNT = None
     VALIDATION_COUNT = 1 # NOTE: Overrides validation ratio; represents number of files used for validation calculation
