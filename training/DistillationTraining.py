@@ -41,10 +41,12 @@ class DistillationTrainer:
         self,
         device, model, optimizer,
         tokenizer,
-        FREEZE_EARLY_LAYERS, VALIDATION_DATA_PERCENTAGE,
+        FREEZE_EARLY_LAYERS, VALIDATION_DATA_PERCENTAGE, VALIDATION_EVALUATION_FREQUENCY,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH,
+        SAVE_OUTPUT, SAVE_MODEL,
+        TRAINING_OUTPUT_PATH, MODEL_OUTPUT_PATH, GRAPH_OUTPUT_PATH,
         teacher_model = 'mrm8488/bert-tiny-finetuned-enron-spam-detection',
-        classification_data_path = '../data/classification/Enron_spam'
+        classification_data_path = '../data/classification/Enron_spam',
     ):
         '''
         '''
@@ -57,11 +59,18 @@ class DistillationTrainer:
 
         self.FREEZE_EARLY_LAYERS = FREEZE_EARLY_LAYERS
         self.VALIDATION_DATA_PERCENTAGE = VALIDATION_DATA_PERCENTAGE
+        self.VALIDATION_EVALUATION_FREQUENCY = VALIDATION_EVALUATION_FREQUENCY
 
         self.NUM_EPOCHS = NUM_EPOCHS
         self.NUM_ITERATIONS = NUM_ITERATIONS
         self.BATCH_SIZE = BATCH_SIZE
         self.MAX_LENGTH = MAX_LENGTH
+
+        self.SAVE_OUTPUT = SAVE_OUTPUT
+        self.SAVE_MODEL = SAVE_MODEL
+        self.TRAINING_OUTPUT_PATH = TRAINING_OUTPUT_PATH
+        self.MODEL_OUTPUT_PATH = MODEL_OUTPUT_PATH
+        self.GRAPH_OUTPUT_PATH = GRAPH_OUTPUT_PATH
 
         self.teacher_model = teacher_model
         self.classification_data_path = classification_data_path
@@ -186,7 +195,9 @@ class DistillationTrainer:
             contents, targets = self.get_enron_validation_data()
 
             for batch in self.chunks(contents, targets):
-                loss = self.calculate_loss(contents, targets, self.BATCH_SIZE, teacher_classifier)
+                batch_contents = batch[0]
+                batch_targets = batch[1]
+                loss = self.calculate_loss(batch_contents, batch_targets, self.BATCH_SIZE, teacher_classifier)
 
                 message = f'Validation loss for batch: {loss.item()}'
                 print(message)
@@ -238,6 +249,33 @@ class DistillationTrainer:
 
         return loss
 
+    def process_outputs(self):
+        '''
+        Processes the output dataframes for training and validation sets. 
+
+        For the training output, it resets the index twice: the first reset is done with dropping the original 
+        index, resulting in the default integer index. The second reset adds the default index as a new column 
+        and resets the index again to the default integer index. The added index column is then renamed to 'step'.
+
+        For the validation output, each row is duplicated 'VALIDATION_EVALUATION_FREQUENCY' number of times. Then,
+        it resets the index in the same way as for the training output. After these steps, an 'iteration' column 
+        is added to the validation output dataframe, which is derived from the 'iteration' column in the 
+        training output dataframe.
+
+        Note: The function directly modifies the 'training_output' and 'validation_output' attributes of the class.
+        '''
+        self.training_output = self.training_output.reset_index(drop = True).reset_index(drop = False) \
+                                .rename(columns = {'index': 'step'})
+        self.validation_output = self.validation_output.reindex(
+            np.repeat(
+                self.validation_output.index.values,
+                self.VALIDATION_EVALUATION_FREQUENCY
+            )
+        )
+        self.validation_output = self.validation_output.reset_index(drop = True).reset_index(drop = False) \
+                                .rename(columns = {'index': 'step'})
+        self.validation_output['iteration'] = self.training_output['iteration']
+
     def train(self):
         '''
         '''
@@ -256,16 +294,86 @@ class DistillationTrainer:
                 message = f'Epoch: {epoch + 1} of {self.NUM_EPOCHS}, Iteration: {iteration + 1} of {self.NUM_ITERATIONS}, Loss: {loss.item()}'
                 print(message)
 
+                self.training_output = pd.concat([
+                    self.training_output,
+                    pd.DataFrame({
+                        'epoch': [epoch + 1],
+                        'iteration': [iteration + 1],
+                        'loss': [loss.item()]
+                    })], ignore_index = True
+                )
+
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
 
                 self.step += 1
-                if self.step % 50 == 0:
+                if self.step % self.VALIDATION_EVALUATION_FREQUENCY == 0:
                     validation_loss = self.calculate_validation_loss(teacher_classifier)
+
+                    self.validation_output = pd.concat([
+                        self.validation_output,
+                        pd.DataFrame({
+                            'epoch': [epoch + 1],
+                            'iteration': [iteration + 1],
+                            'loss': [validation_loss]
+                        })], ignore_index = True
+                    )
         
         if self.FREEZE_EARLY_LAYERS == True:
             self.unfreeze_layers()
+
+        self.timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+
+        self.process_outputs()
+
+        if self.SAVE_OUTPUT == True:
+            self.training_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/distillation_training_output_{self.timestamp}.csv', index = False)
+            self.validation_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/distillation_validation_output_{self.timestamp}.csv', index = False)
+
+        if self.SAVE_MODEL == True:
+            dump(self.model, f'{MODEL_OUTPUT_PATH}/distilled_model_{self.timestamp}.joblib')
+
+    def save_graphs(self, title = ''):
+        '''
+        Plots the training and validation loss as a function of steps, and saves the resulting figure.
+
+        The method creates a line plot with 'step' on the x-axis and 'loss' on the y-axis for both the training
+        and validation outputs. The training data is plotted in blue and labelled 'Train', and the validation data 
+        is plotted in orange and labelled 'Validation'. 
+
+        The resulting plot is saved as a PNG file in the path specified by the 'GRAPH_OUTPUT_PATH' attribute 
+        of the class, with the filename 'training_validation_curves_{timestamp}.png', where '{timestamp}' is 
+        replaced by the current value of the 'timestamp' attribute of the class.
+
+        Note: This method directly uses the 'training_output' and 'validation_output' attributes of the class.
+        '''
+        plt.figure(figsize = (10, 6))
+
+        sns.lineplot(data = self.training_output, x = 'step', y = 'loss', color = 'tab:blue', label = 'Train')
+        sns.lineplot(data = self.validation_output, x = 'step', y = 'loss', color = 'tab:orange', label = 'Validation')
+
+        plt.title(f'{title}')
+
+        plt.xlabel(f'Step (Batch Size = {self.BATCH_SIZE})')
+        plt.ylabel('Distillation Loss')
+
+        min_step = min(self.training_output['step'].min(), self.validation_output['step'].min())
+        max_step = max(self.training_output['step'].max(), self.validation_output['step'].max())
+
+        xticks = np.linspace(min_step, max_step, num = 10, dtype = int)
+        plt.xticks(xticks)
+
+        line_steps = np.arange(self.NUM_ITERATIONS, max_step + 1, self.NUM_ITERATIONS)
+        for step in line_steps:
+            plt.axvline(x = step, color = 'r', linestyle = 'dotted')
+
+        plt.legend()
+
+        plt.savefig(f'{self.GRAPH_OUTPUT_PATH}/linear_scale/distillation_training_validation_curves_{self.timestamp}.png')
+
+        plt.yscale('log')
+        plt.savefig(f'{self.GRAPH_OUTPUT_PATH}/log_scale/distillation_log_scale_training_validation_curves_{self.timestamp}.png')
 
 if __name__ == '__main__':
     np.random.seed(1234)
@@ -279,11 +387,18 @@ if __name__ == '__main__':
     SEQ_LENGTH = 16
 
     VALIDATION_DATA_PERCENTAGE = 0.1
+    VALIDATION_EVALUATION_FREQUENCY = 20
     BATCH_SIZE = 256
-    NUM_EPOCHS = 10
+    NUM_EPOCHS = 1
     NUM_ITERATIONS = math.floor(33716 * (1 - VALIDATION_DATA_PERCENTAGE) / BATCH_SIZE)
 
     FREEZE_EARLY_LAYERS = True
+
+    SAVE_OUTPUT = True
+    SAVE_MODEL = True
+    TRAINING_OUTPUT_PATH = '../output'
+    MODEL_OUTPUT_PATH = '../artifacts/Fine-tuned'
+    GRAPH_OUTPUT_PATH = '../output/illustrations'
 
     MODEL_VERSION = 2
 
@@ -301,8 +416,12 @@ if __name__ == '__main__':
     trainer = DistillationTrainer(
         device, model, optimizer,
         tokenizer,
-        FREEZE_EARLY_LAYERS, VALIDATION_DATA_PERCENTAGE,
-        NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH
+        FREEZE_EARLY_LAYERS, VALIDATION_DATA_PERCENTAGE, VALIDATION_EVALUATION_FREQUENCY,
+        NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH,
+        SAVE_OUTPUT, SAVE_MODEL,
+        TRAINING_OUTPUT_PATH, MODEL_OUTPUT_PATH, GRAPH_OUTPUT_PATH
     )
 
     trainer.train()
+
+    trainer.save_graphs('Training/Validation Loss Curves for Distilled Model')
