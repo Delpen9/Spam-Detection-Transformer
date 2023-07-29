@@ -463,7 +463,7 @@ if __name__ == '__main__':
     FF_DIM = 3072
     NUM_BLOCKS = 1 # TODO: Increase on GPU
     DROPOUT = 0.2
-    SEQ_LENGTH = 64 # TODO: Increase on GPU
+    SEQ_LENGTH = 16 # TODO: Increase on GPU
     MASK_RATIO = 0.15
     EXPANSION_FACTOR = 4
     LEARNING_RATE = 1e-2
