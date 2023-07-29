@@ -484,7 +484,7 @@ if __name__ == '__main__':
 
     VOCAB_SIZE = 30522
     EMBED_DIM = 768
-    NUM_HEADS = 12
+    NUM_HEADS = 6
     FF_DIM = 3072
     NUM_BLOCKS = 1 # TODO: Increase on GPU
     DROPOUT = 0.2
