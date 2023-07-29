@@ -99,7 +99,7 @@ class MLMTrainer:
         self.training_output = pd.DataFrame([], columns = ['epoch', 'iteration', 'loss'])
         self.validation_output = pd.DataFrame([], columns = ['epoch', 'iteration', 'loss'])
 
-        self.timestamp = None
+        self.timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         self.step = 0
 
         logging.basicConfig(filename = f'{LOGGING_OUTPUT_PATH}', filemode = 'w', level = logging.INFO, format = '%(message)s')
@@ -309,6 +309,13 @@ class MLMTrainer:
                                 .rename(columns = {'index': 'step'})
         self.validation_output['iteration'] = self.training_output['iteration']
 
+    def checkpoint(self, epoch):
+        '''
+        '''
+        if self.SAVE_OUTPUT == True:
+            self.training_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/epoch_{epoch}_training_output_{self.timestamp}.csv', index = False)
+            self.validation_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/epoch_{epoch}_validation_output_{self.timestamp}.csv', index = False)
+
     def train(self):
         '''
         Train the model using the specified optimizer and criterion. 
@@ -319,6 +326,9 @@ class MLMTrainer:
             'The VALIDATION_EVALUATION_FREQUENCY must be less than or equal to (<=) NUM_ITERATIONS'
 
             for epoch in range(self.NUM_EPOCHS):
+                if epoch > 0:
+                    self.checkpoint(epoch)
+
                 for iteration in range(self.NUM_ITERATIONS):
                     sentences = self.get_training_batch()
 
@@ -397,13 +407,9 @@ class MLMTrainer:
                         })], ignore_index = True
                     )
 
-            self.timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-
             self.process_outputs()
 
-            if self.SAVE_OUTPUT == True:
-                self.training_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/training_output_{self.timestamp}.csv', index = False)
-                self.validation_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/validation_output_{self.timestamp}.csv', index = False)
+            self.checkpoint('final')
 
             if self.SAVE_MODEL == True:
                 dump(self.model, f'{MODEL_OUTPUT_PATH}/model_{self.timestamp}.joblib')
@@ -473,7 +479,7 @@ if __name__ == '__main__':
     BATCH_SIZE = 32 # TODO: Increase on GPU
     VALIDATION_RATIO = 0.05 # NOTE: Used if VALIDATION_COUNT = None
     VALIDATION_COUNT = 1 # NOTE: Overrides validation ratio; represents number of files used for validation calculation
-    VALIDATION_EVALUATION_FREQUENCY = 100 # NOTE: How often to evaluate the validation set in iterations
+    VALIDATION_EVALUATION_FREQUENCY = 1000 # NOTE: How often to evaluate the validation set in iterations
     NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
                     else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
 
