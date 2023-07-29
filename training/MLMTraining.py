@@ -474,6 +474,8 @@ class MLMTrainer:
         plt.savefig(f'{self.GRAPH_OUTPUT_PATH}/log_scale/log_scale_training_validation_curves_{self.timestamp}.png')
 
 if __name__ == '__main__':
+    torch.cuda.empty_cache()
+    
     np.random.seed(1234)
     DIRECTORY_PATH = '../data/masking/openwebtext/openwebtext'
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
