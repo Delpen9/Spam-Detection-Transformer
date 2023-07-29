@@ -96,6 +96,8 @@ class MLMTrainer:
         self.MODEL_OUTPUT_PATH = MODEL_OUTPUT_PATH
         self.GRAPH_OUTPUT_PATH = GRAPH_OUTPUT_PATH
 
+        self.MODEL_VERSIONS = []
+
         self.training_output = pd.DataFrame([], columns = ['epoch', 'iteration', 'loss'])
         self.validation_output = pd.DataFrame([], columns = ['epoch', 'iteration', 'loss'])
 
@@ -309,12 +311,18 @@ class MLMTrainer:
                                 .rename(columns = {'index': 'step'})
         self.validation_output['iteration'] = self.training_output['iteration']
 
-    def checkpoint(self, epoch):
+    def checkpoint(self):
         '''
         '''
-        if self.SAVE_OUTPUT == True:
-            self.training_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/epoch_{epoch}_training_output_{self.timestamp}.csv', index = False)
-            self.validation_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/epoch_{epoch}_validation_output_{self.timestamp}.csv', index = False)
+        MODEL_NAME = f'{MODEL_OUTPUT_PATH}/version_{self.step}_model_{self.timestamp}.joblib'
+        self.MODEL_VERSIONS.append(MODEL_NAME)
+
+        if self.SAVE_MODEL == True:
+            dump(self.model, MODEL_NAME)
+
+        if len(self.MODEL_VERSIONS) > 5:
+            os.remove(self.MODEL_VERSIONS[0])
+            self.MODEL_VERSIONS = self.MODEL_VERSIONS[1:]
 
     def train(self):
         '''
@@ -326,9 +334,6 @@ class MLMTrainer:
             'The VALIDATION_EVALUATION_FREQUENCY must be less than or equal to (<=) NUM_ITERATIONS'
 
             for epoch in range(self.NUM_EPOCHS):
-                if epoch > 0:
-                    self.checkpoint(epoch)
-
                 for iteration in range(self.NUM_ITERATIONS):
                     sentences = self.get_training_batch()
 
@@ -345,6 +350,9 @@ class MLMTrainer:
                     self.optimizer.zero_grad()
                     loss.backward()
                     self.optimizer.step()
+
+                    if self.step % 50000:
+                        self.checkpoint()
 
                     if iteration % self.VALIDATION_EVALUATION_FREQUENCY == 0:
                         message = '\n' + '#' * 25
@@ -409,10 +417,11 @@ class MLMTrainer:
 
             self.process_outputs()
 
-            self.checkpoint('final')
+            self.checkpoint()
 
-            if self.SAVE_MODEL == True:
-                dump(self.model, f'{MODEL_OUTPUT_PATH}/model_{self.timestamp}.joblib')
+            if self.SAVE_OUTPUT == True:
+                self.training_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/training_output_{self.timestamp}.csv', index = False)
+                self.validation_output.to_csv(f'{self.TRAINING_OUTPUT_PATH}/validation_output_{self.timestamp}.csv', index = False)
 
         except AssertionError as e:
             logging.info(e)
