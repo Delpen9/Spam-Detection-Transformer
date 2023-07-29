@@ -506,7 +506,7 @@ if __name__ == '__main__':
     NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
                     else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
 
-    NUM_ITERATIONS /= 4 # TODO: Remove line later
+    NUM_ITERATIONS = math.floor(NUM_ITERATIONS / 4) # TODO: Remove line later
 
     SAVE_OUTPUT = True
     SAVE_MODEL = True
