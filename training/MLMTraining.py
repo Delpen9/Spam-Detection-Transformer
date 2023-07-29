@@ -33,6 +33,7 @@ import logging
 
 # Miscellaneous
 from datetime import datetime
+import time
 
 class MLMTrainer:
     def __init__(
@@ -103,6 +104,7 @@ class MLMTrainer:
 
         self.timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         self.step = 0
+        self.time = time.time()
 
         logging.basicConfig(filename = f'{LOGGING_OUTPUT_PATH}', filemode = 'w', level = logging.INFO, format = '%(message)s')
 
@@ -405,6 +407,8 @@ class MLMTrainer:
                     message = f'Epoch: {epoch + 1} of {self.NUM_EPOCHS}, Iteration: {iteration + 1} of {self.NUM_ITERATIONS}, Loss: {loss.item()}'
                     print(message)
                     logging.info(message)
+
+                    print(f'Time Elapsed: {time.time() - self.time}')
                     
                     self.training_output = pd.concat([
                         self.training_output,
