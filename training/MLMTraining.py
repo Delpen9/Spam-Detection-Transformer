@@ -506,6 +506,8 @@ if __name__ == '__main__':
     NUM_ITERATIONS = int(1500000 * 32 / BATCH_SIZE * (1 - VALIDATION_RATIO)) if VALIDATION_COUNT == None \
                     else int(1500000 * 32 / BATCH_SIZE - VALIDATION_COUNT)
 
+    NUM_ITERATION /= 4
+
     SAVE_OUTPUT = True
     SAVE_MODEL = True
     TRAINING_OUTPUT_PATH = '../output'
@@ -560,5 +562,5 @@ if __name__ == '__main__':
     )
 
     trainer.train()
-    
+
     trainer.save_graphs('Training/Validation Loss Curves for Masked Language Model')
