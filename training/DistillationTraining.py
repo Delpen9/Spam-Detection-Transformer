@@ -41,6 +41,7 @@ class DistillationTrainer:
         self,
         device, model, optimizer,
         tokenizer,
+        FREEZE_EARLY_LAYERS,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, MAX_LENGTH,
         teacher_model = 'mrm8488/bert-tiny-finetuned-enron-spam-detection',
         classification_data_path = '../data/classification/Enron_spam'
@@ -53,6 +54,8 @@ class DistillationTrainer:
         self.optimizer = optimizer
 
         self.tokenizer = tokenizer
+
+        self.FREEZE_EARLY_LAYERS = FREEZE_EARLY_LAYERS
 
         self.NUM_EPOCHS = NUM_EPOCHS
         self.NUM_ITERATIONS = NUM_ITERATIONS
@@ -127,17 +130,27 @@ class DistillationTrainer:
 
         return (contents, targets, len(targets))
 
+    def freeze_layers(self):
+        '''
+        '''
+        for param in self.model.model.model.parameters():
+            param.requires_grad = False
+
+        self.model.model.fc.requires_grad = True
+    
+    def unfreeze_layers(self):
+        '''
+        '''
+        for param in self.model.model.model.parameters():
+            param.requires_grad = True
+
     def train(self):
         '''
         '''
         teacher_classifier = AutoModelForSequenceClassification.from_pretrained(self.teacher_model)
 
-        # Freeze all the parameters
-        for param in self.model.model.model.parameters():
-            param.requires_grad = False
-
-        # Unfreeze the final layer
-        self.model.model.fc.requires_grad = True
+        if self.FREEZE_EARLY_LAYERS == True:
+            self.freeze_layers()
 
         for epoch in range(self.NUM_EPOCHS):
             for iteration in range(self.NUM_ITERATIONS):
@@ -176,6 +189,9 @@ class DistillationTrainer:
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
+        
+        if self.FREEZE_EARLY_LAYERS == True:
+            self.unfreeze_layers()
 
 if __name__ == '__main__':
     np.random.seed(1234)
@@ -209,6 +225,7 @@ if __name__ == '__main__':
     trainer = DistillationTrainer(
         device, model, optimizer,
         tokenizer,
+        FREEZE_EARLY_LAYERS,
         NUM_EPOCHS, NUM_ITERATIONS, BATCH_SIZE, SEQ_LENGTH
     )
 
