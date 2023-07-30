@@ -380,7 +380,7 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     MODEL_PATH = '../artifacts/MLM/version_9003_model_2023-07-30_03-23-50.joblib'
-    model = load(MODEL_PATH)
+    model = load(MODEL_PATH).to(device)
     
     LEARNING_RATE = 1e-2
     EMBED_DIM = 768
@@ -403,12 +403,12 @@ if __name__ == '__main__':
     MODEL_VERSION = 2
 
     if MODEL_VERSION == 1:
-        transformerEncoder = copy.deepcopy(model)
+        transformerEncoder = copy.deepcopy(model).to(device)
     elif MODEL_VERSION == 2:
-        transformerEncoder = copy.deepcopy(model.model)
+        transformerEncoder = copy.deepcopy(model.model).to(device)
 
-    spamDetectionModel = SpamDetectionModel(transformerEncoder, EMBED_DIM, n_classes = 2)
-    model = DistilledFromTinyBert(spamDetectionModel)
+    spamDetectionModel = SpamDetectionModel(transformerEncoder, EMBED_DIM, n_classes = 2).to(device)
+    model = DistilledFromTinyBert(spamDetectionModel).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
 
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
