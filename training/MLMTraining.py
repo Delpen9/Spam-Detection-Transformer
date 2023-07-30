@@ -166,8 +166,8 @@ class MLMTrainer:
 
                     if len(file_sentences) < 4160:
                         self.step += 1
-                        return self.get_training_batch()
-                        
+                        return self.get_training_batch() # Re-run procedure with next step
+
                     batch_indices = np.arange(batch_index_start, batch_index_start + self.BATCH_SIZE, 1)
                     batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
                     sentences.extend([sentence.split() for sentence in batch_sentences])
