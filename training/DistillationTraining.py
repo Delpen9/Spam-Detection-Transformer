@@ -285,6 +285,7 @@ class DistillationTrainer:
             self.freeze_layers()
 
         for epoch in range(self.NUM_EPOCHS):
+            self.step = 0
             for iteration in range(self.NUM_ITERATIONS):
                 # batch_size is explicitly mentioned here to handle end of dataframe
                 contents, targets, batch_size = self.get_enron_training_data()
