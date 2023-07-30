@@ -279,7 +279,7 @@ class DistillationTrainer:
     def train(self):
         '''
         '''
-        teacher_classifier = AutoModelForSequenceClassification.from_pretrained(self.teacher_model)
+        teacher_classifier = AutoModelForSequenceClassification.from_pretrained(self.teacher_model).to(self.device)
 
         if self.FREEZE_EARLY_LAYERS == True:
             self.freeze_layers()
