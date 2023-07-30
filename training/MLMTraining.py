@@ -164,7 +164,7 @@ class MLMTrainer:
                 with open(os.path.join(self.directory_path, filenames), 'r') as f:
                     file_sentences = f.read().lower().strip().split('\n')
 
-                    if len(file_sentences) < 4160:
+                    if len(file_sentences) < self.BATCH_SIZE:
                         self.step += 1
                         return self.get_training_batch() # Re-run procedure with next step
 
