@@ -13,3 +13,11 @@
 2. Batch size of 32
 3. Sequence length of 64
 5. Fine-tuned on distillation with batch size of 16; 5 epochs; enron dataset
+
+########################
+3rd 2 graphs:
+########################
+1. MLM trained with 1/64th of total webtext dataset for 1 epoch; increase number of blocks to 3
+2. Batch size of 32
+3. Sequence length of 64
+5. Fine-tuned on distillation with batch size of 16; 5 epochs; enron dataset
