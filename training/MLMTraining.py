@@ -163,6 +163,11 @@ class MLMTrainer:
 
                 with open(os.path.join(self.directory_path, filenames), 'r') as f:
                     file_sentences = f.read().lower().strip().split('\n')
+
+                    if len(file_sentences) < 4160:
+                        self.step += 1
+                        return self.get_training_batch()
+                        
                     batch_indices = np.arange(batch_index_start, batch_index_start + self.BATCH_SIZE, 1)
                     batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
                     sentences.extend([sentence.split() for sentence in batch_sentences])
@@ -490,7 +495,7 @@ if __name__ == '__main__':
     DROPOUT = 0.2
     SEQ_LENGTH = 16 # TODO: Increase on GPU
     MASK_RATIO = 0.15
-    EXPANSION_FACTOR = 1
+    EXPANSION_FACTOR = 2
     LEARNING_RATE = 1e-2
     MODEL_VERSION = 2
     MASK_ID = 103 # NOTE: Specific to BERTTokenizerFast
