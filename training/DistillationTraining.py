@@ -383,7 +383,7 @@ if __name__ == '__main__':
     MODEL_PATH = '../artifacts/MLM/version_23437_model_2023-07-30_19-17-22.joblib'
     model = load(MODEL_PATH).to(device)
     
-    LEARNING_RATE = 1e-2
+    LEARNING_RATE = 1e-1
     EMBED_DIM = 768
     SEQ_LENGTH = 64
 
