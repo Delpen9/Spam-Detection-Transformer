@@ -357,7 +357,7 @@ class MLMTrainer:
                     loss.backward()
                     self.optimizer.step()
 
-                    if self.step % 500:
+                    if self.step % 500 == 0:
                         self.checkpoint()
 
                     if iteration % self.VALIDATION_EVALUATION_FREQUENCY == 0:

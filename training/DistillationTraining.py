@@ -379,7 +379,7 @@ if __name__ == '__main__':
     np.random.seed(1234)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    MODEL_PATH = '../artifacts/MLM/model_2023-07-28_17-59-18.joblib'
+    MODEL_PATH = '../artifacts/MLM/version_9004_model_2023-07-30_03-23-50.joblib'
     model = load(MODEL_PATH)
     
     LEARNING_RATE = 1e-2
@@ -388,8 +388,8 @@ if __name__ == '__main__':
 
     VALIDATION_DATA_PERCENTAGE = 0.1
     VALIDATION_EVALUATION_FREQUENCY = 20
-    BATCH_SIZE = 256
-    NUM_EPOCHS = 1
+    BATCH_SIZE = 128
+    NUM_EPOCHS = 3
     NUM_ITERATIONS = math.floor(33716 * (1 - VALIDATION_DATA_PERCENTAGE) / BATCH_SIZE)
 
     FREEZE_EARLY_LAYERS = True
