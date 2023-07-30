@@ -487,12 +487,12 @@ if __name__ == '__main__':
     EMBED_DIM = 768
     NUM_HEADS = 12
     FF_DIM = 3072
-    NUM_BLOCKS = 1 # TODO: Increase on GPU
+    NUM_BLOCKS = 3 # TODO: Increase on GPU
     DROPOUT = 0.2
     SEQ_LENGTH = 64 # TODO: Increase on GPU
     MASK_RATIO = 0.15
     EXPANSION_FACTOR = 2
-    LEARNING_RATE = 1e-3
+    LEARNING_RATE = 1e-2
     MODEL_VERSION = 2
     MASK_ID = 103 # NOTE: Specific to BERTTokenizerFast
     NUM_EPOCHS = 1
