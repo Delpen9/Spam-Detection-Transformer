@@ -245,7 +245,7 @@ class DistillationTrainer:
 
         teacher_probabilities = F.softmax(teacher_classifier(inputs)['logits'])
 
-        loss = self.model.loss(inputs, teacher_probabilities, targets)
+        loss = self.model.loss(inputs.to(self.device), teacher_probabilities.to(self.device), targets.to(self.device))
 
         return loss
 
