@@ -1,7 +1,7 @@
 ########################
 1st 2 graphs:
 ########################
-1. MLM trained with 1/8th of total webtext dataset for 1 epoch
+1. MLM trained with 1/8th of total webtext dataset for 1 epoch; 1 block; expansion factor 2
 2. Batch size of 512
 3. Sequence length of 16
 5. Fine-tuned on distillation with batch size of 16; 3 epochs; enron dataset
@@ -9,7 +9,7 @@
 ########################
 2nd 2 graphs:
 ########################
-1. MLM trained with 1/64th of total webtext dataset for 1 epoch
+1. MLM trained with 1/64th of total webtext dataset for 1 epoch; 1 block; expansion factor 2
 2. Batch size of 32
 3. Sequence length of 64
 5. Fine-tuned on distillation with batch size of 16; 5 epochs; enron dataset
@@ -17,7 +17,7 @@
 ########################
 3rd 2 graphs:
 ########################
-1. MLM trained with 1/64th of total webtext dataset for 1 epoch; increase number of blocks to 3
+1. MLM trained with 1/64th of total webtext dataset for 1 epoch; increase number of blocks to 3; expansion factor of 4
 2. Batch size of 32
 3. Sequence length of 64
 5. Fine-tuned on distillation with batch size of 16; 5 epochs; enron dataset
