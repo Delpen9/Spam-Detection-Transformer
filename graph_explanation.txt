@@ -20,4 +20,4 @@
 1. MLM trained with 1/64th of total webtext dataset for 1 epoch; increase number of blocks to 3; expansion factor of 4
 2. Batch size of 32
 3. Sequence length of 64
-5. Fine-tuned on distillation with batch size of 16; 5 epochs; enron dataset
+5. Fine-tuned on distillation with batch size of 4; 15 epochs; enron dataset
