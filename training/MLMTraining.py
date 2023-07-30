@@ -163,11 +163,6 @@ class MLMTrainer:
 
                 with open(os.path.join(self.directory_path, filenames), 'r') as f:
                     file_sentences = f.read().lower().strip().split('\n')
-
-                    if len(file_sentences) < self.BATCH_SIZE:
-                        self.step += 1
-                        return self.get_training_batch() # Re-run procedure with next step
-
                     batch_indices = np.arange(batch_index_start, batch_index_start + self.BATCH_SIZE, 1)
                     batch_sentences = [file_sentences[batch_index] for batch_index in batch_indices]
                     sentences.extend([sentence.split() for sentence in batch_sentences])
