@@ -393,7 +393,7 @@ if __name__ == '__main__':
     NUM_EPOCHS = 3
     NUM_ITERATIONS = math.floor(33716 * (1 - VALIDATION_DATA_PERCENTAGE) / BATCH_SIZE)
 
-    FREEZE_EARLY_LAYERS = True
+    FREEZE_EARLY_LAYERS = False
 
     SAVE_OUTPUT = True
     SAVE_MODEL = True
