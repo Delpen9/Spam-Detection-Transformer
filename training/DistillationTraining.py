@@ -380,7 +380,7 @@ if __name__ == '__main__':
     np.random.seed(1234)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    MODEL_PATH = '../artifacts/MLM/version_9003_model_2023-07-30_03-23-50.joblib'
+    MODEL_PATH = '../artifacts/MLM/version_5859_model_2023-07-30_17-20-59.joblib'
     model = load(MODEL_PATH).to(device)
     
     LEARNING_RATE = 1e-2
