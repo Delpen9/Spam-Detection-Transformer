@@ -340,6 +340,7 @@ class MLMTrainer:
             'The VALIDATION_EVALUATION_FREQUENCY must be less than or equal to (<=) NUM_ITERATIONS'
 
             for epoch in range(self.NUM_EPOCHS):
+                self.step = 0
                 for iteration in range(self.NUM_ITERATIONS):
                     sentences = self.get_training_batch()
 
