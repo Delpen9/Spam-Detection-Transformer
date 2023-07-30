@@ -387,6 +387,8 @@ if __name__ == '__main__':
     EMBED_DIM = 768
     SEQ_LENGTH = 64
 
+    DROPOUT = 0.4
+
     VALIDATION_DATA_PERCENTAGE = 0.1
     BATCH_SIZE = 16
     NUM_EPOCHS = 15
@@ -407,6 +409,8 @@ if __name__ == '__main__':
         transformerEncoder = copy.deepcopy(model).to(device)
     elif MODEL_VERSION == 2:
         transformerEncoder = copy.deepcopy(model.model).to(device)
+
+    transformerEncoder.dropout = DROPOUT
 
     spamDetectionModel = SpamDetectionModel(transformerEncoder, EMBED_DIM, n_classes = 2).to(device)
     model = DistilledFromTinyBert(spamDetectionModel).to(device)
