@@ -491,7 +491,7 @@ if __name__ == '__main__':
     SEQ_LENGTH = 16 # TODO: Increase on GPU
     MASK_RATIO = 0.15
     EXPANSION_FACTOR = 2
-    LEARNING_RATE = 1e-2
+    LEARNING_RATE = 1e-1
     MODEL_VERSION = 2
     MASK_ID = 103 # NOTE: Specific to BERTTokenizerFast
     NUM_EPOCHS = 1
