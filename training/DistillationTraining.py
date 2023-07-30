@@ -380,14 +380,14 @@ if __name__ == '__main__':
     np.random.seed(1234)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    MODEL_PATH = '../artifacts/MLM/version_23437_model_2023-07-30_19-17-22.joblib'
+    MODEL_PATH = '../artifacts/MLM/version_23437_model_2023-07-30_18-50-34.joblib'
     model = load(MODEL_PATH).to(device)
     
-    LEARNING_RATE = 1e-1
+    LEARNING_RATE = 1e-2
     EMBED_DIM = 768
     SEQ_LENGTH = 64
 
-    DROPOUT = 0.4
+    DROPOUT = 0.2
 
     VALIDATION_DATA_PERCENTAGE = 0.1
     BATCH_SIZE = 16
