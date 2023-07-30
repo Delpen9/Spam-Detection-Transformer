@@ -51,3 +51,10 @@ cd "$folder" || exit
 #     # Replace the original file with the temp file
 #     mv "${file}.tmp" "$file"
 # done
+
+# min_lines=4160
+# for file in *.txt; do
+#     if [ $(wc -l <"$file") -lt $min_lines ]; then
+#         rm "$file"
+#     fi
+# done
