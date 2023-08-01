@@ -110,27 +110,25 @@ if __name__ == "__main__":
         print(f'Test Accuracy: {test_acc}%')
 
     y_true_np = y_true.cpu().numpy()
-    print(y_true_np)
     y_prob_np = y_probs[:, 1].cpu().numpy()
-    print(y_prob_np)
 
     # compute ROC curve and ROC area
     fpr, tpr, _ = roc_curve(y_true_np, y_prob_np)
     roc_auc = auc(fpr, tpr)
 
     # plot settings
-    sns.set_style("whitegrid")
-    plt.figure(figsize=(10, 8))
+    sns.set_style('whitegrid')
+    plt.figure(figsize = (10, 8))
 
     # plot the ROC curve
-    plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
-    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')  # diagonal line
+    plt.plot(fpr, tpr, color = 'darkorange', lw = 2, label = 'ROC curve (AUC = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], color = 'navy', lw = 2, linestyle = '--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('Receiver Operating Characteristic (ROC) Curve')
-    plt.legend(loc="lower right")
+    plt.title('Pre-trained Transformer ROC on LingSpam (No Training)')
+    plt.legend(loc = 'lower right')
 
     # show the plot
     plt.savefig('roc_chart.png')
