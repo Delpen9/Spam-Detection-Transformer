@@ -84,7 +84,7 @@ if __name__ == "__main__":
         y_pred = torch.Tensor().to(device)
 
         for batch_idx, test_data in enumerate(test_loader):
-            inputs = test_data[0]
+            inputs = test_data[0].to(device)
             inputs = tokenizer(
                 inputs,
                 padding = 'max_length',
@@ -93,7 +93,7 @@ if __name__ == "__main__":
                 return_tensors = 'pt'
             )['input_ids'].long().to(device)
             
-            targets = test_data[1]
+            targets = test_data[1].to(device)
 
             output = model(inputs)
             output = F.softmax(output, dim = -1)
