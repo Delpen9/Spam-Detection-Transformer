@@ -72,7 +72,7 @@ if __name__ == "__main__":
     model = load(MODEL_PATH)
 
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
-    dataset = SpamDataset(test_data['text'], test_data['label'])
+    dataset = SpamDataset(test_df['text'], test_df['label'])
     test_loader = DataLoader(dataset, batch_size = 32)
 
     model.eval()
