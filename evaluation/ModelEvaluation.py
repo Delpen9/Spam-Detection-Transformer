@@ -84,7 +84,7 @@ if __name__ == "__main__":
         y_pred = torch.Tensor().to(device)
 
         for batch_idx, test_data in enumerate(test_loader):
-            inputs = test_data[0].to(device)
+            inputs = test_data[0]
             inputs = tokenizer(
                 inputs,
                 padding = 'max_length',
