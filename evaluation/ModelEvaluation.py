@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
             targets = test_data[1]
 
-            output = model(inputs..long())
+            output = model(inputs.long())
             output = F.softmax(output, dim = -1)
 
             y_true = torch.cat((y_true, targets), 0)
