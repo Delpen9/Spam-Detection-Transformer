@@ -82,7 +82,7 @@ if __name__ == "__main__":
         y_pred = torch.Tensor()
 
         for batch_idx, test_data in enumerate(test_loader):
-            inputs = test_df[0]
+            inputs = test_data[0]
             inputs = tokenizer(
                 inputs,
                 truncation = True,
@@ -90,7 +90,7 @@ if __name__ == "__main__":
                 return_tensors = 'pt'
             )['input_ids']
 
-            targets = test_df[1]
+            targets = test_data[1]
 
             output = model(inputs.float())
             output = F.softmax(output, dim = -1)
