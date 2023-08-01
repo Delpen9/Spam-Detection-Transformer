@@ -80,8 +80,8 @@ if __name__ == "__main__":
     model.eval()
 
     with torch.no_grad():
-        y_true = torch.Tensor()
-        y_pred = torch.Tensor()
+        y_true = torch.Tensor().to(device)
+        y_pred = torch.Tensor().to(device)
 
         for batch_idx, test_data in enumerate(test_loader):
             inputs = test_data[0]
@@ -92,8 +92,6 @@ if __name__ == "__main__":
                 max_length = SEQ_LENGTH,
                 return_tensors = 'pt'
             )['input_ids'].long().to(device)
-
-            print(inputs)
             
             targets = test_data[1]
 
