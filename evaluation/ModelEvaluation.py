@@ -83,6 +83,7 @@ if __name__ == "__main__":
     with torch.no_grad():
         y_true = torch.Tensor().to(device)
         y_pred = torch.Tensor().to(device)
+        y_probs = torch.Tensor().to(device)
 
         for batch_idx, test_data in enumerate(test_loader):
             inputs = test_data[0]
@@ -101,6 +102,7 @@ if __name__ == "__main__":
 
             y_true = torch.cat((y_true, targets), 0)
             y_pred = torch.cat((y_pred, torch.argmax(y_prob, dim = -1)), 0)
+            y_probs = torch.cat((y_probs, y_prob), 0)
                 
         test_acc = (y_true == y_pred).float().sum()
         test_acc /= dataset_size
@@ -109,7 +111,7 @@ if __name__ == "__main__":
 
     y_true_np = y_true.cpu().numpy()
     print(y_true_np)
-    y_prob_np = y_prob[:, 1].cpu().numpy()
+    y_prob_np = y_probs[:, 1].cpu().numpy()
     print(y_prob_np)
 
     # compute ROC curve and ROC area
