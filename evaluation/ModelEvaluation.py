@@ -75,6 +75,8 @@ if __name__ == "__main__":
     dataset = SpamDataset(test_df['text'], test_df['label'])
     test_loader = DataLoader(dataset, batch_size = 32)
 
+    SEQ_LENGTH = 64
+
     model.eval()
 
     with torch.no_grad():
@@ -85,11 +87,15 @@ if __name__ == "__main__":
             inputs = test_data[0]
             inputs = tokenizer(
                 inputs,
+                padding = 'max_length',
                 truncation = True,
+                max_length = SEQ_LENGTH,
                 padding = True,
                 return_tensors = 'pt'
             )['input_ids'].long().to(device)
 
+            print(inputs)
+            
             targets = test_data[1]
 
             output = model(inputs)
