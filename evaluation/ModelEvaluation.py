@@ -69,7 +69,7 @@ if __name__ == "__main__":
     dataset_size = test_df.shape[0]
 
     MODEL_PATH = '../artifacts/Fine-tuned/distilled_model_2023-07-30_18-50-34.joblib'
-    model = load(MODEL_PATH).model
+    model = load(MODEL_PATH).model.to(device)
 
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
     dataset = SpamDataset(test_df['text'], test_df['label'])
@@ -88,11 +88,11 @@ if __name__ == "__main__":
                 truncation = True,
                 padding = True,
                 return_tensors = 'pt'
-            )['input_ids']
+            )['input_ids'].long().to(device)
 
             targets = test_data[1]
 
-            output = model(inputs.long())
+            output = model(inputs)
             output = F.softmax(output, dim = -1)
 
             y_true = torch.cat((y_true, targets), 0)
