@@ -107,8 +107,8 @@ if __name__ == "__main__":
         test_acc *= 100
         print(f'Test Accuracy: {test_acc}%')
 
-    y_true_np = y_true.numpy()
-    y_prob_np = y_prob[:, 1].numpy()
+    y_true_np = y_true.cpu().numpy()
+    y_prob_np = y_prob[:, 1].cpu().numpy()
 
     # compute ROC curve and ROC area
     fpr, tpr, _ = roc_curve(y_true_np, y_prob_np)
