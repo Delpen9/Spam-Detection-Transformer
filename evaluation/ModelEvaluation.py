@@ -90,7 +90,6 @@ if __name__ == "__main__":
                 padding = 'max_length',
                 truncation = True,
                 max_length = SEQ_LENGTH,
-                padding = True,
                 return_tensors = 'pt'
             )['input_ids'].long().to(device)
 
