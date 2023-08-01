@@ -32,6 +32,7 @@ from joblib import load, dump
 # Graphing
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.metrics import roc_curve, auc
 
 # Miscellaneous
 from datetime import datetime
@@ -96,12 +97,36 @@ if __name__ == "__main__":
             targets = test_data[1].to(device)
 
             output = model(inputs)
-            output = F.softmax(output, dim = -1)
+            y_prob = F.softmax(output, dim = -1)
 
             y_true = torch.cat((y_true, targets), 0)
-            y_pred = torch.cat((y_pred, torch.argmax(output, dim = -1)), 0)
+            y_pred = torch.cat((y_pred, torch.argmax(y_prob, dim = -1)), 0)
                 
         test_acc = (y_true == y_pred).float().sum()
         test_acc /= dataset_size
         test_acc *= 100
         print(f'Test Accuracy: {test_acc}%')
+
+    y_true_np = y_true.numpy()
+    y_prob_np = y_prob[:, 1].numpy()
+
+    # compute ROC curve and ROC area
+    fpr, tpr, _ = roc_curve(y_true_np, y_prob_np)
+    roc_auc = auc(fpr, tpr)
+
+    # plot settings
+    sns.set_style("whitegrid")
+    plt.figure(figsize=(10, 8))
+
+    # plot the ROC curve
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')  # diagonal line
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic (ROC) Curve')
+    plt.legend(loc="lower right")
+
+    # show the plot
+    plt.savefig('roc_chart.png')
