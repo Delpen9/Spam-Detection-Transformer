@@ -69,7 +69,7 @@ if __name__ == "__main__":
     dataset_size = test_df.shape[0]
 
     MODEL_PATH = '../artifacts/Fine-tuned/distilled_model_2023-07-30_18-50-34.joblib'
-    model = torch.load(MODEL_PATH).to(device)
+    model = load(MODEL_PATH)
 
     tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
     dataset = SpamDataset(test_data['text'], test_data['label'])
